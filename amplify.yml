@@ -1,26 +1,19 @@
-version: 1
-frontend:
-  phases:
-    preBuild:
-      commands:
-        - npm ci
-    build:
-      commands:
-        - npm run build
-        - echo "Static export completed"
-    postBuild:
-      commands:
-        # Remove admin and summaries pages from deployment
-        - echo "Removing admin and summaries pages from deployment..."
-        - rm -rf out/admin out/admin.html
-        - rm -rf out/summaries out/summaries.html
-        - echo "Admin and summaries pages excluded from AWS deployment"
-        - echo "Deployment ready!"
-  artifacts:
-    baseDirectory: out
-    files:
-      - '**/*'
-  cache:
-    paths:
-      - node_modules/**/*
-      - .next/cache/**/*
+  version: 1
+  frontend:
+    phases:
+      preBuild:
+        commands:
+          - npm ci
+      build:
+        commands:
+          - npm run build
+      postBuild:
+        commands:
+          - rm -rf out/admin out/admin.html out/summaries out/summaries.html
+    artifacts:
+      baseDirectory: out
+      files:
+        - '**/*'
+    cache:
+      paths:
+        - node_modules/**/*
