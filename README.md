@@ -82,7 +82,7 @@ parho/
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/parho.git
+   git clone https://github.com/owais-io/parho.git
    cd parho
    ```
 
