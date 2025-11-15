@@ -22,9 +22,9 @@ A modern, responsive Next.js website that showcases AI-summarized news articles 
 - **Fonts**: Inter + Playfair Display (Google Fonts)
 - **Database**: SQLite (better-sqlite3)
 - **Content**: MDX (Markdown + JSX)
-- **AI**: Ollama (Local LLM - llama3.2:3b)
+- **AI**: Ollama (Local LLM - gpt-oss:20b)
 - **API**: The Guardian Open Platform API
-- **Deployment**: AWS Amplify (static hosting)
+- **Deployment**: Vercel (static hosting)
 
 ## 📁 Project Structure
 
@@ -65,7 +65,7 @@ parho/
 ├── content/
 │   └── articles/               # MDX files (generated)
 ├── articles.db                 # SQLite database
-├── amplify.yml                 # AWS Amplify config
+├── vercel.json                 # Vercel deployment config
 ├── .env.example                # Environment variables template
 └── next.config.js              # Next.js configuration
 ```
@@ -93,8 +93,8 @@ parho/
 
 3. **Set up Ollama:**
    ```bash
-   # Pull the required model (3GB download)
-   ollama pull llama3.2:3b
+   # Pull the required model (~14GB download)
+   ollama pull gpt-oss:20b
 
    # Verify Ollama is running
    ollama list
@@ -112,7 +112,7 @@ parho/
    ```env
    GUARDIAN_API_KEY=your_guardian_api_key_here
    OLLAMA_BASE_URL=http://localhost:11434
-   OLLAMA_MODEL=llama3.2:3b
+   OLLAMA_MODEL=gpt-oss:20b
    NODE_ENV=development
    ```
 
@@ -195,27 +195,33 @@ The build will generate static HTML pages in the `out/` directory.
 3. **Store** - Summaries stored in SQLite database
 4. **Deploy** - Creates MDX files in `content/articles/` directory
 5. **Build** - Next.js generates static HTML pages from MDX files
-6. **Serve** - Static pages deployed to AWS Amplify (or any static host)
+6. **Serve** - Static pages deployed to Vercel (or any static host)
 
 ## 🌐 Deployment
 
-This project is configured for static export and can be deployed to:
+This project is deployed on **Vercel** with automatic deployments from GitHub.
 
-- **AWS Amplify** (recommended) - Auto-deploys from GitHub
-- **Vercel** - Zero-config deployment
-- **Netlify** - Drag and drop or Git integration
+### Live Site
+
+🌐 **[parho.net](https://parho.net)** - Production deployment
+
+### Deployment Features
+
+The repository includes `vercel.json` configuration that:
+- ✅ Automatically builds on push to main branch
+- ✅ Removes admin and summaries pages from production
+- ✅ Sets up custom domain with SSL
+- ✅ Free hosting with generous bandwidth
+- ✅ Global CDN for fast delivery
+- ✅ Preview deployments for pull requests
+
+### Alternative Deployment Options
+
+This project can also be deployed to:
+- **Netlify** - Similar to Vercel, zero-config
 - **GitHub Pages** - Free static hosting
+- **AWS S3 + CloudFront** - More control, slightly complex
 - **Any static host** - Just upload the `out/` folder
-
-### AWS Amplify Deployment
-
-The repository includes `amplify.yml` configuration:
-- Automatically builds on push to main branch
-- Excludes admin and summaries pages from production
-- Sets up custom domain with SSL
-- Free tier: 1000 build minutes/month
-
-See the full deployment guide in the [deployment documentation](#).
 
 ## 🎯 Future Enhancements
 
