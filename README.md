@@ -149,6 +149,75 @@ npx serve out
 
 The build will generate static HTML pages in the `out/` directory.
 
+---
+
+## 🎨 Customization
+
+### Customizing the AI Prompt
+
+The Ollama prompt determines how articles are summarized and titles are transformed. You can customize it to change the tone, length, or focus of the summaries.
+
+**Location:** `src/lib/ollama.ts` (lines 59-78)
+
+**Steps to customize:**
+
+1. **Open the file:**
+   ```bash
+   # Navigate to the Ollama service file
+   src/lib/ollama.ts
+   ```
+
+2. **Find the `createPrompt()` function** (around line 59)
+
+3. **Modify the prompt template:**
+   ```typescript
+   function createPrompt(title: string, body: string): string {
+     return `You are simplifying news articles for everyday readers...
+
+     // Customize this text to change:
+     // - Tone (formal, casual, technical, etc.)
+     // - Summary length (60-80 words, or your preferred length)
+     // - Focus areas (what to emphasize)
+     // - Writing style (conversational, professional, etc.)
+
+     ...`;
+   }
+   ```
+
+4. **Example customizations:**
+
+   **For a more technical audience:**
+   ```typescript
+   return `You are a technical news analyst. Transform this Guardian article:
+
+   1. REWRITE THE TITLE: Make it precise and informative
+   2. SUMMARIZE: Provide a 100-120 word technical summary focusing on facts, data, and implications
+
+   ...`;
+   ```
+
+   **For shorter summaries:**
+   ```typescript
+   2. SUMMARIZE THE ARTICLE: Write a 40-50 word summary...
+   ```
+
+   **For different focus:**
+   ```typescript
+   Focus on economic implications and policy impact rather than human interest stories.
+   ```
+
+5. **Test your changes:**
+   - Process a few articles through the admin panel
+   - Check if the summaries match your expectations
+   - Adjust the prompt as needed
+
+6. **Important notes:**
+   - Keep the format structure: `TITLE: ... SUMMARY: ...`
+   - This format is required for the parser to work correctly
+   - If you change the format, update `parseOllamaResponse()` function accordingly (lines 83-122)
+
+---
+
 ## 🎨 Design Features
 
 ### Color Scheme
