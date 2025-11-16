@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
-import { ChevronDown, Menu, X } from 'lucide-react';
+import { ChevronDown, Menu, X, Github } from 'lucide-react';
 import { Category } from '@/types';
 
 interface HeaderProps {
@@ -94,6 +94,17 @@ export default function Header({ categories }: HeaderProps) {
                 </div>
               )}
             </div>
+
+            {/* GitHub Link */}
+            <a
+              href="https://github.com/owais-io/parho"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-all font-medium shadow-md hover:shadow-lg"
+            >
+              <Github className="h-5 w-5" />
+              View Code on GitHub
+            </a>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -133,6 +144,18 @@ export default function Header({ categories }: HeaderProps) {
                   {category.name}
                 </Link>
               ))}
+
+              {/* GitHub Link for Mobile */}
+              <a
+                href="https://github.com/owais-io/parho"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-all font-medium shadow-md mt-4"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Github className="h-5 w-5" />
+                View Code on GitHub
+              </a>
             </nav>
           </div>
         )}
