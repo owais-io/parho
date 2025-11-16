@@ -137,14 +137,8 @@ export function getAllCategories(): Category[] {
     id++;
   });
 
-  // Sort by article count (descending), then by latest post date (descending)
+  // Sort by latest post date (descending) - most recent category first
   categories.sort((a, b) => {
-    // First, compare by article count
-    if (b.articleCount !== a.articleCount) {
-      return b.articleCount - a.articleCount;
-    }
-
-    // If article counts are equal, compare by latest post date
     const dateA = new Date(a.latestPostDate || 0).getTime();
     const dateB = new Date(b.latestPostDate || 0).getTime();
     return dateB - dateA;

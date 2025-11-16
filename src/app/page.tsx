@@ -1,5 +1,6 @@
 import ArticleGrid from '@/components/ArticleGrid';
-import { getAllArticles, getAllCategories } from '@/lib/mdx';
+import CategorySections from '@/components/CategorySections';
+import { getAllArticles, getAllCategories, getArticlesByCategory } from '@/lib/mdx';
 import { TrendingUp, Clock, Globe } from 'lucide-react';
 import { Metadata } from 'next';
 
@@ -12,6 +13,12 @@ export default function HomePage() {
   const allArticles = getAllArticles();
   const categories = getAllCategories();
   const featuredArticles = allArticles.slice(0, 3);
+
+  // Get all categories with their articles (sorted by latest article date)
+  const categoriesWithArticles = categories.map(category => ({
+    category,
+    articles: getArticlesByCategory(category.slug).slice(0, 8)
+  }));
 
   const stats = [
     { icon: Globe, label: 'Global Coverage', value: `${allArticles.length}+` },
@@ -78,6 +85,9 @@ export default function HomePage() {
           <ArticleGrid articles={allArticles} skipFirst={3} />
         </div>
       </section>
+
+      {/* Category Sections */}
+      <CategorySections categoriesWithArticles={categoriesWithArticles} />
     </>
   );
 }

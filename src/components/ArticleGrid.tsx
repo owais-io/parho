@@ -6,7 +6,7 @@ import SummaryModal from './SummaryModal';
 import LoadMoreButton from './LoadMoreButton';
 import { Article } from '@/types';
 
-const ARTICLES_PER_PAGE = 10;
+const ARTICLES_PER_PAGE = 8;
 
 interface ArticleGridProps {
   articles: Article[];

@@ -67,6 +67,8 @@ parho/
 │   │   ├── categories/         # Category pages
 │   │   ├── summaries/          # Summaries management page
 │   │   └── page.tsx            # Homepage
+│   ├── components/
+│   │   └── CategorySections.tsx  # Client component for category sections with modal
 │   ├── lib/
 │   │   ├── db.ts               # SQLite database operations
 │   │   ├── mdx.ts              # MDX file operations
