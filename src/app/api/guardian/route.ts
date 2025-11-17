@@ -1,40 +1,83 @@
 import { NextResponse } from 'next/server';
 import { saveArticles, filterNewArticleIds } from '@/lib/db';
 
+// Helper function to add delay between requests (rate limiting)
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const pageSize = Math.min(Number(searchParams.get('pageSize')) || 50, 50); // Max 50 articles
 
-    // Calculate date 24 hours ago
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const fromDate = yesterday.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    // Get and validate days parameter (1-30 days, default: 1)
+    const daysParam = Number(searchParams.get('days')) || 1;
+    const days = Math.max(1, Math.min(daysParam, 30)); // Clamp between 1-30
 
-    // Build Guardian API URL
+    const pageSize = 50; // Guardian API max per request
+
+    // Calculate date range
+    const today = new Date();
+    const startDate = new Date();
+    startDate.setDate(today.getDate() - days);
+    const fromDate = startDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    const toDate = today.toISOString().split('T')[0];
+
+    console.log(`Fetching articles from last ${days} day(s): ${fromDate} to ${toDate}`);
+
     const apiKey = process.env.GUARDIAN_API_KEY;
-    const guardianUrl = new URL('https://content.guardianapis.com/search');
+    let allFetchedArticles: any[] = [];
+    let totalAvailable = 0;
+    let page = 1;
 
-    guardianUrl.searchParams.set('api-key', apiKey || '');
-    guardianUrl.searchParams.set('from-date', fromDate);
-    guardianUrl.searchParams.set('page-size', pageSize.toString());
-    guardianUrl.searchParams.set('order-by', 'newest');
-    guardianUrl.searchParams.set('show-fields', 'thumbnail,trailText,byline');
+    // Fetch all available articles within the date range
+    while (true) {
+      // Build Guardian API URL for this page
+      const guardianUrl = new URL('https://content.guardianapis.com/search');
 
-    // Fetch from Guardian API
-    const response = await fetch(guardianUrl.toString());
+      guardianUrl.searchParams.set('api-key', apiKey || '');
+      guardianUrl.searchParams.set('from-date', fromDate);
+      guardianUrl.searchParams.set('page-size', pageSize.toString());
+      guardianUrl.searchParams.set('page', page.toString());
+      guardianUrl.searchParams.set('order-by', 'newest');
+      guardianUrl.searchParams.set('show-fields', 'thumbnail,trailText,byline');
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch from Guardian API');
+      // Fetch from Guardian API
+      const response = await fetch(guardianUrl.toString());
+
+      if (!response.ok) {
+        console.log(`Page ${page} returned status ${response.status}. Stopping pagination.`);
+        break; // Stop fetching if we hit an error
+      }
+
+      const data = await response.json();
+      const pageArticles = data.response.results;
+      totalAvailable = data.response.total; // Total articles available in the time range
+
+      // If no articles returned, we've reached the end
+      if (!pageArticles || pageArticles.length === 0) {
+        console.log(`No more articles available after page ${page - 1}`);
+        break;
+      }
+
+      allFetchedArticles = allFetchedArticles.concat(pageArticles);
+
+      console.log(`Fetched page ${page}: ${pageArticles.length} articles (${allFetchedArticles.length}/${totalAvailable} total)`);
+
+      // Stop if we've fetched all available articles
+      if (allFetchedArticles.length >= totalAvailable) {
+        console.log(`All articles fetched: ${allFetchedArticles.length}`);
+        break;
+      }
+
+      // Rate limiting: Wait 1 second between requests
+      await delay(1000); // 1 second delay to respect API rate limit
+
+      page++; // Move to next page
     }
 
-    const data = await response.json();
-    const fetchedArticles = data.response.results;
-
     // Filter out duplicate articles (already fetched before)
-    const articleIds = fetchedArticles.map((article: any) => article.id);
+    const articleIds = allFetchedArticles.map((article: any) => article.id);
     const newArticleIds = filterNewArticleIds(articleIds);
-    const newArticles = fetchedArticles.filter((article: any) =>
+    const newArticles = allFetchedArticles.filter((article: any) =>
       newArticleIds.includes(article.id)
     );
 
@@ -45,13 +88,16 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       success: true,
+      daysRequested: days,
+      dateRange: {
+        from: fromDate,
+        to: toDate,
+      },
       articles: newArticles,
-      total: data.response.total,
-      fetched: fetchedArticles.length,
+      totalAvailable: totalAvailable, // Total articles in date range
+      fetched: allFetchedArticles.length,
       new: newArticles.length,
-      duplicates: fetchedArticles.length - newArticles.length,
-      currentPage: data.response.currentPage,
-      pages: data.response.pages,
+      duplicates: allFetchedArticles.length - newArticles.length,
     });
 
   } catch (error) {

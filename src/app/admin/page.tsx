@@ -32,6 +32,11 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [totalArticles, setTotalArticles] = useState(0);
+  const [selectedDays, setSelectedDays] = useState<number>(1);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [selectedSections, setSelectedSections] = useState<Set<string>>(new Set());
+  const [showSectionDropdown, setShowSectionDropdown] = useState(false);
+  const articlesPerPage = 100;
 
   // Load articles from database
   const loadArticlesFromDB = async () => {
@@ -44,6 +49,7 @@ export default function AdminPage() {
       if (data.success) {
         setArticles(data.articles);
         setTotalArticles(data.total);
+        setCurrentPage(1); // Reset to first page when loading new articles
       } else {
         setError(data.error || 'Failed to load articles');
       }
@@ -61,12 +67,12 @@ export default function AdminPage() {
     setError(null);
     setSuccess(null);
     try {
-      const response = await fetch('/api/guardian?pageSize=50');
+      const response = await fetch(`/api/guardian?days=${selectedDays}`);
       const data = await response.json();
 
       if (data.success) {
         // Show success message with statistics
-        const message = `Fetched ${data.fetched} articles: ${data.new} new, ${data.duplicates} duplicates skipped`;
+        const message = `Fetched ${data.fetched} articles from last ${selectedDays} day(s): ${data.new} new, ${data.duplicates} duplicates skipped`;
         setSuccess(message);
 
         // Reload from database to show saved articles
@@ -89,12 +95,57 @@ export default function AdminPage() {
     loadArticlesFromDB();
   }, []);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showSectionDropdown && !target.closest('.section-filter-dropdown')) {
+        setShowSectionDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showSectionDropdown]);
+
   const handleSelectAll = (checked: boolean) => {
+    // Use filteredArticles for select all
+    const filteredArts = selectedSections.size === 0
+      ? articles
+      : articles.filter(article => selectedSections.has(article.sectionName));
+
+    // Calculate current page articles from filtered set
+    const startIdx = (currentPage - 1) * articlesPerPage;
+    const endIdx = startIdx + articlesPerPage;
+    const currentPageArticles = filteredArts.slice(startIdx, endIdx);
+
     if (checked) {
-      setSelectedArticles(new Set(articles.map(article => article.id)));
+      // Select all articles on current page
+      const newSelected = new Set(selectedArticles);
+      currentPageArticles.forEach(article => newSelected.add(article.id));
+      setSelectedArticles(newSelected);
     } else {
-      setSelectedArticles(new Set());
+      // Deselect all articles on current page
+      const newSelected = new Set(selectedArticles);
+      currentPageArticles.forEach(article => newSelected.delete(article.id));
+      setSelectedArticles(newSelected);
     }
+  };
+
+  const handleToggleSection = (sectionName: string) => {
+    const newSelected = new Set(selectedSections);
+    if (newSelected.has(sectionName)) {
+      newSelected.delete(sectionName);
+    } else {
+      newSelected.add(sectionName);
+    }
+    setSelectedSections(newSelected);
+    setCurrentPage(1); // Reset to first page when filter changes
+  };
+
+  const handleClearFilters = () => {
+    setSelectedSections(new Set());
+    setCurrentPage(1);
   };
 
   const handleSelectArticle = (articleId: string, checked: boolean) => {
@@ -273,8 +324,32 @@ export default function AdminPage() {
     }).format(date);
   };
 
-  const allSelected = articles.length > 0 && selectedArticles.size === articles.length;
-  const someSelected = selectedArticles.size > 0 && selectedArticles.size < articles.length;
+  // Extract unique sections with article counts
+  const sectionCounts = articles.reduce<Record<string, number>>((acc, article) => {
+    const section = article.sectionName;
+    acc[section] = (acc[section] || 0) + 1;
+    return acc;
+  }, {});
+
+  const sections = Object.entries(sectionCounts)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
+
+  // Filter articles by selected sections
+  const filteredArticles = selectedSections.size === 0
+    ? articles // No filter, show all
+    : articles.filter(article => selectedSections.has(article.sectionName));
+
+  // Pagination calculations (on filtered articles)
+  const totalPages = Math.ceil(filteredArticles.length / articlesPerPage);
+  const startIndex = (currentPage - 1) * articlesPerPage;
+  const endIndex = startIndex + articlesPerPage;
+  const paginatedArticles = filteredArticles.slice(startIndex, endIndex);
+
+  // Check if all articles on current page are selected
+  const selectedOnPage = paginatedArticles.filter(article => selectedArticles.has(article.id)).length;
+  const allSelected = paginatedArticles.length > 0 && selectedOnPage === paginatedArticles.length;
+  const someSelected = selectedOnPage > 0 && selectedOnPage < paginatedArticles.length;
   const isProcessing = processingQueue.some(item => item.status === 'processing');
 
   return (
@@ -286,10 +361,81 @@ export default function AdminPage() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Admin Panel</h1>
               <p className="mt-1 text-sm text-gray-600">
-                Manage Guardian articles from the last 24 hours
+                Manage Guardian articles from the last {selectedDays} {selectedDays === 1 ? 'day' : 'days'}
+                {selectedSections.size > 0 && (
+                  <span className="ml-2 text-blue-600">
+                    • Filtered by {selectedSections.size} {selectedSections.size === 1 ? 'section' : 'sections'}
+                  </span>
+                )}
               </p>
             </div>
             <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <label htmlFor="days-select" className="text-sm font-medium text-gray-700">
+                  Time Range:
+                </label>
+                <select
+                  id="days-select"
+                  value={selectedDays}
+                  onChange={(e) => setSelectedDays(Number(e.target.value))}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value={1}>Last 24 hours</option>
+                  <option value={3}>Last 3 days</option>
+                  <option value={7}>Last 7 days</option>
+                  <option value={15}>Last 15 days</option>
+                  <option value={30}>Last 30 days</option>
+                </select>
+              </div>
+
+              {/* Section Filter Dropdown */}
+              <div className="relative section-filter-dropdown">
+                <button
+                  onClick={() => setShowSectionDropdown(!showSectionDropdown)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  Filter Sections {selectedSections.size > 0 && `(${selectedSections.size})`}
+                </button>
+
+                {showSectionDropdown && (
+                  <div className="absolute top-full mt-2 left-0 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-auto">
+                    <div className="p-3 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
+                      <span className="text-sm font-medium text-gray-700">
+                        Select Sections
+                      </span>
+                      {selectedSections.size > 0 && (
+                        <button
+                          onClick={handleClearFilters}
+                          className="text-xs text-blue-600 hover:text-blue-800"
+                        >
+                          Clear All
+                        </button>
+                      )}
+                    </div>
+                    <div className="p-2">
+                      {sections.map((section) => (
+                        <label
+                          key={section.name}
+                          className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 rounded cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedSections.has(section.name)}
+                            onChange={() => handleToggleSection(section.name)}
+                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          />
+                          <span className="flex-1 text-sm text-gray-900">
+                            {section.name}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            ({section.count})
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
               <a
                 href="/summaries"
                 className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
@@ -428,8 +574,21 @@ export default function AdminPage() {
                 <p className="text-2xl font-bold text-gray-900">{totalArticles.toLocaleString()}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Loaded</p>
-                <p className="text-2xl font-bold text-gray-900">{articles.length}</p>
+                <p className="text-sm text-gray-600">
+                  {selectedSections.size > 0 ? 'Filtered' : 'Loaded'}
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {filteredArticles.length}
+                  {selectedSections.size > 0 && (
+                    <span className="text-base text-gray-500 ml-1">
+                      / {articles.length}
+                    </span>
+                  )}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Current Page</p>
+                <p className="text-2xl font-bold text-gray-900">{currentPage}/{totalPages}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">Selected</p>
@@ -482,38 +641,39 @@ export default function AdminPage() {
 
         {/* Articles Table */}
         {!loading && articles.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="w-12 px-6 py-3 text-left">
-                      <input
-                        type="checkbox"
-                        checked={allSelected}
-                        ref={(input) => {
-                          if (input) input.indeterminate = someSelected;
-                        }}
-                        onChange={(e) => handleSelectAll(e.target.checked)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                      />
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Article
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Section
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Published
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {articles.map((article) => (
+          <>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="w-12 px-6 py-3 text-left">
+                        <input
+                          type="checkbox"
+                          checked={allSelected}
+                          ref={(input) => {
+                            if (input) input.indeterminate = someSelected;
+                          }}
+                          onChange={(e) => handleSelectAll(e.target.checked)}
+                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Article
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Section
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Published
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {paginatedArticles.map((article) => (
                     <tr
                       key={article.id}
                       className={`hover:bg-gray-50 transition-colors ${
@@ -588,16 +748,106 @@ export default function AdminPage() {
                       </td>
                     </tr>
                   ))}
-                </tbody>
-              </table>
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mt-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-600">
+                    Showing {startIndex + 1} to {Math.min(endIndex, filteredArticles.length)} of {filteredArticles.length} articles
+                    {selectedSections.size > 0 && (
+                      <span className="text-gray-500"> (filtered from {articles.length} total)</span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage(1)}
+                      disabled={currentPage === 1}
+                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      First
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Previous
+                    </button>
+
+                    {/* Page numbers */}
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={`px-3 py-2 text-sm border rounded-lg transition-colors ${
+                              currentPage === pageNum
+                                ? 'bg-blue-600 text-white border-blue-600'
+                                : 'border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Next
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage(totalPages)}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Last
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Empty State */}
         {!loading && articles.length === 0 && !error && (
           <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
             <p className="text-gray-600">No articles found</p>
+          </div>
+        )}
+
+        {/* No Results from Filter */}
+        {!loading && articles.length > 0 && filteredArticles.length === 0 && (
+          <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+            <p className="text-gray-600 mb-2">No articles match the selected filters</p>
+            <button
+              onClick={handleClearFilters}
+              className="text-blue-600 hover:text-blue-800 text-sm"
+            >
+              Clear filters
+            </button>
           </div>
         )}
       </div>
