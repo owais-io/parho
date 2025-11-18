@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Clock, Trash2, RefreshCw, Download, Cpu, Link as LinkIcon } from 'lucide-react';
+import { Clock, Trash2, RefreshCw, Download, Cpu, Link as LinkIcon, X } from 'lucide-react';
 
 interface GuardianArticle {
   id: string;
@@ -36,6 +36,9 @@ export default function AdminPage() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [selectedSections, setSelectedSections] = useState<Set<string>>(new Set());
   const [showSectionDropdown, setShowSectionDropdown] = useState(false);
+  const [showDateDropdown, setShowDateDropdown] = useState(false);
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
   const articlesPerPage = 100;
 
   // Load articles from database
@@ -95,18 +98,21 @@ export default function AdminPage() {
     loadArticlesFromDB();
   }, []);
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       if (showSectionDropdown && !target.closest('.section-filter-dropdown')) {
         setShowSectionDropdown(false);
       }
+      if (showDateDropdown && !target.closest('.date-filter-dropdown')) {
+        setShowDateDropdown(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showSectionDropdown]);
+  }, [showSectionDropdown, showDateDropdown]);
 
   const handleSelectAll = (checked: boolean) => {
     // Use filteredArticles for select all
@@ -146,6 +152,17 @@ export default function AdminPage() {
   const handleClearFilters = () => {
     setSelectedSections(new Set());
     setCurrentPage(1);
+  };
+
+  const handleClearDateFilter = () => {
+    setStartDate('');
+    setEndDate('');
+    setCurrentPage(1);
+  };
+
+  const handleApplyDateFilter = () => {
+    setCurrentPage(1);
+    setShowDateDropdown(false);
   };
 
   const handleSelectArticle = (articleId: string, checked: boolean) => {
@@ -232,6 +249,11 @@ export default function AdminPage() {
   const handleBulkProcess = () => {
     const idsToProcess = Array.from(selectedArticles);
     addToQueue(idsToProcess);
+  };
+
+  // Cancel all queued items (keeps currently processing item)
+  const cancelQueue = () => {
+    setProcessingQueue(prev => prev.filter(item => item.status !== 'queued'));
   };
 
   // Process queue sequentially
@@ -335,10 +357,36 @@ export default function AdminPage() {
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
 
-  // Filter articles by selected sections
-  const filteredArticles = selectedSections.size === 0
-    ? articles // No filter, show all
-    : articles.filter(article => selectedSections.has(article.sectionName));
+  // Filter articles by selected sections and date range
+  const filteredArticles = articles.filter(article => {
+    // Section filter
+    const matchesSection = selectedSections.size === 0 || selectedSections.has(article.sectionName);
+
+    // Date filter
+    let matchesDate = true;
+    if (startDate || endDate) {
+      const articleDate = new Date(article.webPublicationDate);
+
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        if (articleDate < start) {
+          matchesDate = false;
+        }
+      }
+
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        if (articleDate > end) {
+          matchesDate = false;
+        }
+      }
+    }
+
+    // AND logic: must match both filters
+    return matchesSection && matchesDate;
+  });
 
   // Pagination calculations (on filtered articles)
   const totalPages = Math.ceil(filteredArticles.length / articlesPerPage);
@@ -367,6 +415,11 @@ export default function AdminPage() {
                     • Filtered by {selectedSections.size} {selectedSections.size === 1 ? 'section' : 'sections'}
                   </span>
                 )}
+                {(startDate || endDate) && (
+                  <span className="ml-2 text-blue-600">
+                    • Date range: {startDate || '...'} to {endDate || '...'}
+                  </span>
+                )}
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -386,6 +439,66 @@ export default function AdminPage() {
                   <option value={15}>Last 15 days</option>
                   <option value={30}>Last 30 days</option>
                 </select>
+              </div>
+
+              {/* Date Filter Dropdown */}
+              <div className="relative date-filter-dropdown">
+                <button
+                  onClick={() => setShowDateDropdown(!showDateDropdown)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  Filter by Date {(startDate || endDate) && '✓'}
+                </button>
+
+                {showDateDropdown && (
+                  <div className="absolute top-full mt-2 left-0 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                    <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700">
+                        Select Date Range
+                      </span>
+                      {(startDate || endDate) && (
+                        <button
+                          onClick={handleClearDateFilter}
+                          className="text-xs text-blue-600 hover:text-blue-800"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                    <div className="p-4 space-y-4">
+                      <div>
+                        <label htmlFor="start-date" className="block text-sm font-medium text-gray-700 mb-2">
+                          Start Date
+                        </label>
+                        <input
+                          id="start-date"
+                          type="date"
+                          value={startDate}
+                          onChange={(e) => setStartDate(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="end-date" className="block text-sm font-medium text-gray-700 mb-2">
+                          End Date
+                        </label>
+                        <input
+                          id="end-date"
+                          type="date"
+                          value={endDate}
+                          onChange={(e) => setEndDate(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                      <button
+                        onClick={handleApplyDateFilter}
+                        className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                      >
+                        Apply Filter
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Section Filter Dropdown */}
@@ -468,10 +581,22 @@ export default function AdminPage() {
         {/* Processing Queue */}
         {processingQueue.length > 0 && (
           <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border-2 border-green-200 p-6 mb-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Cpu className="w-5 h-5 text-green-600 animate-pulse" />
-              Processing Queue ({processingQueue.length})
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Cpu className="w-5 h-5 text-green-600 animate-pulse" />
+                Processing Queue ({processingQueue.length})
+              </h2>
+              {processingQueue.some(item => item.status === 'queued') && (
+                <button
+                  onClick={cancelQueue}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                  title="Cancel all queued items"
+                >
+                  <X className="w-4 h-4" />
+                  Cancel Queue
+                </button>
+              )}
+            </div>
 
             <div className="space-y-3">
               {processingQueue.map((item) => (
