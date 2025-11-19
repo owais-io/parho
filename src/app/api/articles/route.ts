@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getAllArticles, deleteArticle, deleteArticles, countArticles } from '@/lib/db';
 
+// Force dynamic rendering - required for database access
+export const dynamic = 'force-dynamic';
+
 // GET - Retrieve all articles from database
 export async function GET() {
   try {

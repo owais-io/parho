@@ -4,7 +4,21 @@
       "Bash(node test-api.js:*)",
       "Bash(npm run dev:*)",
       "Bash(curl:*)",
-      "Bash(python -m json.tool:*)"
+      "Bash(python -m json.tool:*)",
+      "Bash(if [ -f articles.db ])",
+      "Bash(then echo \"Database exists\")",
+      "Bash(sqlite3:*)",
+      "Bash(else echo \"Database does not exist\")",
+      "Bash(fi)",
+      "Bash(node -e:*)",
+      "Bash(npm run build:*)",
+      "Bash(netstat:*)",
+      "Bash(lsof:*)",
+      "Bash(node test-db-direct.js:*)",
+      "Bash(node test-db-module.mjs:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

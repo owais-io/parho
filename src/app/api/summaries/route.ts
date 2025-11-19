@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getAllSummaries, countSummaries, deleteSummary } from '@/lib/db';
 
+// Force dynamic rendering - required for database access
+export const dynamic = 'force-dynamic';
+
 // GET - Retrieve all summaries from database
 export async function GET() {
   try {

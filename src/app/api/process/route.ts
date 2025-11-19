@@ -3,6 +3,9 @@ import { getArticleById, deleteArticle } from '@/lib/db';
 import { saveSummary, isArticleProcessed } from '@/lib/db';
 import { processArticleWithOllama, checkOllamaStatus } from '@/lib/ollama';
 
+// Force dynamic rendering - required for database access
+export const dynamic = 'force-dynamic';
+
 // POST - Process article(s) through Ollama
 export async function POST(request: Request) {
   try {

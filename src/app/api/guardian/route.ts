@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { saveArticles, filterNewArticleIds } from '@/lib/db';
 
+// Force dynamic rendering - required for database access
+export const dynamic = 'force-dynamic';
+
 // Helper function to add delay between requests (rate limiting)
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
