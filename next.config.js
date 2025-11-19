@@ -8,13 +8,16 @@ const withMDX = require('@next/mdx')({
 })
 
 const nextConfig = {
-  output: 'export',
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
   images: {
-    unoptimized: true, // Required for static export
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'media.guim.co.uk',
+        pathname: '/**',
+      },
+    ],
   },
-  // Optional: Add trailing slash for better static hosting compatibility
-  trailingSlash: true,
 }
 
 module.exports = withMDX(nextConfig)
