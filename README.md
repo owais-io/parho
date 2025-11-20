@@ -393,6 +393,10 @@ This project is licensed under the MIT License.
 - Website: [owais.io](https://owais.io)
 - LinkedIn: [Connect with Owais](https://linkedin.com/in/owais)
 
+## 🤝 Development
+
+This project was built with **AI-assisted coding** using [Claude Code](https://claude.com/claude-code), demonstrating how AI can accelerate software development while maintaining code quality and best practices.
+
 ---
 
 Built as a demonstration of practical AI/ML application in content processing and transformation using open-source models.
