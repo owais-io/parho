@@ -1,17 +1,24 @@
 import { NextResponse } from 'next/server';
-import { getAllArticles, deleteArticle, deleteArticles, countArticles } from '@/lib/db';
+import { getArticlesPaginated, deleteArticle, deleteArticles } from '@/lib/db';
 
 // Force dynamic rendering - required for database access
 export const dynamic = 'force-dynamic';
 
-// GET - Retrieve all articles from database
-export async function GET() {
+// GET - Retrieve articles from database with pagination
+export async function GET(request: Request) {
   try {
-    const articles = getAllArticles();
-    const total = countArticles();
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '100', 10);
+
+    // Validate pagination parameters
+    const validPage = Math.max(1, page);
+    const validLimit = Math.min(Math.max(1, limit), 500); // Max 500 per page
+
+    const result = getArticlesPaginated(validPage, validLimit);
 
     // Transform articles to match the frontend format
-    const transformedArticles = articles.map(article => ({
+    const transformedArticles = result.articles.map(article => ({
       id: article.id,
       type: article.type,
       sectionId: article.sectionId,
@@ -31,7 +38,9 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       articles: transformedArticles,
-      total: total,
+      total: result.total,
+      page: result.page,
+      totalPages: result.totalPages,
     });
 
   } catch (error) {

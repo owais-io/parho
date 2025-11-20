@@ -150,6 +150,31 @@ export function getAllArticles(): Article[] {
   return stmt.all() as Article[];
 }
 
+// Get paginated articles
+export function getArticlesPaginated(page: number = 1, limit: number = 100): {
+  articles: Article[];
+  total: number;
+  page: number;
+  totalPages: number;
+} {
+  const offset = (page - 1) * limit;
+
+  // Get total count
+  const countStmt = db.prepare('SELECT COUNT(*) as count FROM articles');
+  const { count } = countStmt.get() as { count: number };
+
+  // Get paginated results
+  const stmt = db.prepare('SELECT * FROM articles ORDER BY webPublicationDate DESC LIMIT ? OFFSET ?');
+  const articles = stmt.all(limit, offset) as Article[];
+
+  return {
+    articles,
+    total: count,
+    page,
+    totalPages: Math.ceil(count / limit)
+  };
+}
+
 // Get article by ID
 export function getArticleById(id: string): Article | undefined {
   const stmt = db.prepare('SELECT * FROM articles WHERE id = ?');

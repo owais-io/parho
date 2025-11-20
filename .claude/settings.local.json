@@ -18,7 +18,10 @@
       "Bash(node test-db-module.mjs:*)",
       "Bash(findstr:*)",
       "Bash(taskkill:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(timeout 15 bash -c \"while ! netstat -ano | findstr '':3000.*LISTENING'' > /dev/null 2>&1; do sleep 1; done; echo ''Server is ready''\")"
     ],
     "deny": [],
     "ask": []
