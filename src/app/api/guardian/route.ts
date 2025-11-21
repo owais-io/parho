@@ -22,7 +22,12 @@ export async function GET(request: Request) {
     const startDate = new Date();
     startDate.setDate(today.getDate() - days);
     const fromDate = startDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-    const toDate = today.toISOString().split('T')[0];
+
+    // Use tomorrow's date to ensure we get all articles published today
+    // (Guardian API interprets bare dates as start of day, i.e., midnight)
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    const toDate = tomorrow.toISOString().split('T')[0];
 
     console.log(`Fetching articles from last ${days} day(s): ${fromDate} to ${toDate}`);
 
