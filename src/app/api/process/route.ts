@@ -61,25 +61,13 @@ export async function POST(request: Request) {
           continue;
         }
 
-        // Fetch full article content from Guardian API
-        const apiKey = process.env.GUARDIAN_API_KEY;
-        const guardianUrl = `https://content.guardianapis.com/${guardianId}?api-key=${apiKey}&show-fields=bodyText,body,trailText`;
-
-        const guardianResponse = await fetch(guardianUrl);
-        if (!guardianResponse.ok) {
-          throw new Error('Failed to fetch article from Guardian API');
-        }
-
-        const guardianData = await guardianResponse.json();
-        const fullArticle = guardianData.response.content;
-
-        // Get article body text
-        const bodyText = fullArticle.fields?.bodyText || fullArticle.fields?.body || fullArticle.fields?.trailText || '';
+        // Get article body text from database (already fetched in initial call)
+        const bodyText = article.bodyText || article.trailText || '';
 
         if (!bodyText) {
           errors.push({
             guardianId,
-            error: 'No article content available',
+            error: 'No article content available. Article may need to be re-fetched with bodyText field.',
           });
           continue;
         }

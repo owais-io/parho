@@ -46,7 +46,7 @@ export async function GET(request: Request) {
       guardianUrl.searchParams.set('page-size', pageSize.toString());
       guardianUrl.searchParams.set('page', page.toString());
       guardianUrl.searchParams.set('order-by', 'newest');
-      guardianUrl.searchParams.set('show-fields', 'thumbnail,trailText,byline');
+      guardianUrl.searchParams.set('show-fields', 'thumbnail,trailText,byline,bodyText');
 
       // Fetch from Guardian API
       const response = await fetch(guardianUrl.toString());

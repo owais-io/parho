@@ -18,15 +18,15 @@ export default function ArticleCard({ article, onSummaryClick }: ArticleCardProp
 
   return (
     <article className="article-card bg-white rounded-xl shadow-lg overflow-hidden group">
-      <div className="relative h-48 overflow-hidden">
+      <div className="relative h-48 overflow-hidden bg-gray-100">
         <Image
           src={article.imageUrl}
           alt={article.title}
           fill
-          className="object-cover group-hover:scale-105 transition-transform duration-300"
+          className="object-contain group-hover:scale-105 transition-transform duration-300"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
         
         {/* Category Badge */}
         <div className="absolute top-3 left-3">

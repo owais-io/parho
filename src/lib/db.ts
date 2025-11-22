@@ -19,9 +19,18 @@ db.exec(`
     thumbnail TEXT,
     trailText TEXT,
     byline TEXT,
+    bodyText TEXT,
     createdAt TEXT DEFAULT CURRENT_TIMESTAMP
   )
 `);
+
+// Add bodyText column to existing tables (migration)
+// Check if column exists, if not add it
+try {
+  db.exec(`ALTER TABLE articles ADD COLUMN bodyText TEXT`);
+} catch (error) {
+  // Column already exists, ignore error
+}
 
 // Create fetched_article_ids table to track all fetched article IDs
 // This table persists IDs even when articles are deleted, to prevent duplicate fetching
@@ -92,6 +101,7 @@ export interface Article {
   thumbnail?: string;
   trailText?: string;
   byline?: string;
+  bodyText?: string;
   createdAt?: string;
 }
 
@@ -111,8 +121,8 @@ export function saveArticle(article: any) {
   const stmt = db.prepare(`
     INSERT OR REPLACE INTO articles (
       id, type, sectionId, sectionName, webPublicationDate,
-      webTitle, webUrl, pillarId, pillarName, thumbnail, trailText, byline
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      webTitle, webUrl, pillarId, pillarName, thumbnail, trailText, byline, bodyText
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   return stmt.run(
@@ -127,7 +137,8 @@ export function saveArticle(article: any) {
     article.pillarName || null,
     article.fields?.thumbnail || null,
     article.fields?.trailText || null,
-    article.fields?.byline || null
+    article.fields?.byline || null,
+    article.fields?.bodyText || null
   );
 }
 
