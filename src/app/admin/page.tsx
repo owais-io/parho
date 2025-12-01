@@ -24,6 +24,14 @@ interface QueueItem {
   error?: string;
 }
 
+interface ProcessingMetrics {
+  averageSeconds: number | null;
+  averageMinutes: number | null;
+  count: number;
+  minSeconds: number | null;
+  maxSeconds: number | null;
+}
+
 export default function AdminPage() {
   const [articles, setArticles] = useState<GuardianArticle[]>([]);
   const [selectedArticles, setSelectedArticles] = useState<Set<string>>(new Set());
@@ -39,6 +47,7 @@ export default function AdminPage() {
   const [showDateDropdown, setShowDateDropdown] = useState(false);
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
+  const [metrics, setMetrics] = useState<ProcessingMetrics | null>(null);
   const articlesPerPage = 100;
 
   // Load articles from database with pagination
@@ -94,8 +103,23 @@ export default function AdminPage() {
     }
   };
 
+  // Load processing metrics
+  const loadMetrics = async () => {
+    try {
+      const response = await fetch('/api/metrics?limit=10');
+      const data = await response.json();
+
+      if (data.success) {
+        setMetrics(data.metrics);
+      }
+    } catch (err) {
+      console.error('Failed to load metrics:', err);
+    }
+  };
+
   useEffect(() => {
     loadArticlesFromDB(1);
+    loadMetrics();
   }, []);
 
   // Close dropdowns when clicking outside
@@ -294,8 +318,9 @@ export default function AdminPage() {
               );
             }, 2000);
 
-            // Update total count
+            // Update total count and reload metrics
             setTotalArticles(prev => prev - 1);
+            loadMetrics();
           } else {
             throw new Error('Processing failed');
           }
@@ -692,6 +717,22 @@ export default function AdminPage() {
               <div>
                 <p className="text-sm text-gray-600">Selected</p>
                 <p className="text-2xl font-bold text-blue-600">{selectedArticles.size}</p>
+              </div>
+              <div className="border-l border-gray-300 pl-6">
+                <p className="text-sm text-gray-600">Avg Processing Time (Last 10)</p>
+                {metrics && metrics.count > 0 ? (
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-2xl font-bold text-green-600">
+                      {metrics.averageMinutes ? metrics.averageMinutes.toFixed(1) : '—'}
+                    </p>
+                    <p className="text-sm text-gray-500">min</p>
+                    <p className="text-xs text-gray-400">
+                      ({metrics.count} {metrics.count === 1 ? 'article' : 'articles'})
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-2xl font-bold text-gray-400">—</p>
+                )}
               </div>
             </div>
 

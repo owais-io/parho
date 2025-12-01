@@ -72,11 +72,18 @@ export async function POST(request: Request) {
           continue;
         }
 
+        // Track processing start time
+        const startTime = Date.now();
+
         // Process through Ollama (this takes 2-5 minutes)
         const processed = await processArticleWithOllama({
           title: article.webTitle,
           body: bodyText,
         });
+
+        // Calculate processing duration in seconds
+        const endTime = Date.now();
+        const durationSeconds = (endTime - startTime) / 1000;
 
         // Save to summaries table
         saveSummary({
@@ -86,6 +93,7 @@ export async function POST(request: Request) {
           section: article.sectionName,
           imageUrl: article.thumbnail || undefined,
           publishedDate: article.webPublicationDate,
+          processingDurationSeconds: durationSeconds,
         });
 
         // Delete article from articles table if requested

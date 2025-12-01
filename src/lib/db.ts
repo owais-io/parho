@@ -57,7 +57,8 @@ if (tableInfo && tableInfo.sql.includes('FOREIGN KEY')) {
       section TEXT,
       imageUrl TEXT,
       publishedDate TEXT,
-      processedAt TEXT DEFAULT CURRENT_TIMESTAMP
+      processedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      processingDurationSeconds REAL
     );
 
     -- Copy data from old table
@@ -82,11 +83,19 @@ if (tableInfo && tableInfo.sql.includes('FOREIGN KEY')) {
       section TEXT,
       imageUrl TEXT,
       publishedDate TEXT,
-      processedAt TEXT DEFAULT CURRENT_TIMESTAMP
+      processedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      processingDurationSeconds REAL
     )
   `);
 }
 // If table exists without FK, do nothing
+
+// Add processingDurationSeconds column to existing summaries table (migration)
+try {
+  db.exec(`ALTER TABLE summaries ADD COLUMN processingDurationSeconds REAL`);
+} catch (error) {
+  // Column already exists, ignore error
+}
 
 export interface Article {
   id: string;
@@ -114,6 +123,7 @@ export interface Summary {
   imageUrl: string | null;
   publishedDate: string | null;
   processedAt: string;
+  processingDurationSeconds: number | null;
 }
 
 // Insert or update article
@@ -260,11 +270,12 @@ export function saveSummary(data: {
   section?: string;
   imageUrl?: string;
   publishedDate?: string;
+  processingDurationSeconds?: number;
 }) {
   const stmt = db.prepare(`
     INSERT OR REPLACE INTO summaries (
-      guardianId, transformedTitle, summary, section, imageUrl, publishedDate
-    ) VALUES (?, ?, ?, ?, ?, ?)
+      guardianId, transformedTitle, summary, section, imageUrl, publishedDate, processingDurationSeconds
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
 
   return stmt.run(
@@ -273,7 +284,8 @@ export function saveSummary(data: {
     data.summary,
     data.section || null,
     data.imageUrl || null,
-    data.publishedDate || null
+    data.publishedDate || null,
+    data.processingDurationSeconds || null
   );
 }
 
@@ -307,6 +319,43 @@ export function countSummaries(): number {
   const stmt = db.prepare('SELECT COUNT(*) as count FROM summaries');
   const result = stmt.get() as { count: number };
   return result.count;
+}
+
+// Get average processing time of latest N summaries
+export function getAverageProcessingTime(limit: number = 10): {
+  averageSeconds: number | null;
+  count: number;
+  minSeconds: number | null;
+  maxSeconds: number | null;
+} {
+  const stmt = db.prepare(`
+    SELECT
+      AVG(processingDurationSeconds) as avgSeconds,
+      COUNT(processingDurationSeconds) as count,
+      MIN(processingDurationSeconds) as minSeconds,
+      MAX(processingDurationSeconds) as maxSeconds
+    FROM (
+      SELECT processingDurationSeconds
+      FROM summaries
+      WHERE processingDurationSeconds IS NOT NULL
+      ORDER BY processedAt DESC
+      LIMIT ?
+    )
+  `);
+
+  const result = stmt.get(limit) as {
+    avgSeconds: number | null;
+    count: number;
+    minSeconds: number | null;
+    maxSeconds: number | null;
+  };
+
+  return {
+    averageSeconds: result.avgSeconds,
+    count: result.count,
+    minSeconds: result.minSeconds,
+    maxSeconds: result.maxSeconds
+  };
 }
 
 export default db;
