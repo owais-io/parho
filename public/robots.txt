@@ -1,0 +1,13 @@
+# robots.txt for parho.net
+
+# Allow all search engines to crawl the site
+User-agent: *
+Allow: /
+
+# Disallow admin and internal pages
+Disallow: /admin
+Disallow: /summaries
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://parho.net/sitemap.xml

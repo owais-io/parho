@@ -6,6 +6,9 @@ import { Grid, Filter } from 'lucide-react';
 export const metadata: Metadata = {
   title: 'All Categories - parho.net',
   description: 'Explore all news categories available on parho.net. Find articles from world news, technology, politics, business, sports, and more.',
+  alternates: {
+    canonical: '/categories',
+  },
 };
 
 export default function CategoriesPage() {

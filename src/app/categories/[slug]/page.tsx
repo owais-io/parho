@@ -1,10 +1,12 @@
 import { notFound } from 'next/navigation';
 import CategoryArticleGrid from '@/components/CategoryArticleGrid';
+import StructuredData from '@/components/StructuredData';
 import { getAllArticles, getAllCategories, getCategoryBySlug } from '@/lib/mdx';
 import { Article } from '@/types';
 import { ArrowLeft, FileText, Calendar, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import { Metadata } from 'next';
+import { getCollectionPageSchema, getBreadcrumbSchema } from '@/lib/structured-data';
 
 interface CategoryPageProps {
   params: {
@@ -33,6 +35,9 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   return {
     title: `${category.name} - parho.net`,
     description: `Explore ${category.articleCount} articles in the ${category.name} category. AI-summarized news from The Guardian.`,
+    alternates: {
+      canonical: `/categories/${params.slug}`,
+    },
   };
 }
 
@@ -57,6 +62,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
   return (
     <>
+      <StructuredData data={getCollectionPageSchema(category)} />
       {/* Header Section */}
       <section className="bg-gradient-to-r from-primary-600 to-primary-700 py-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">

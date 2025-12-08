@@ -1,12 +1,17 @@
 import ArticleGrid from '@/components/ArticleGrid';
 import CategorySections from '@/components/CategorySections';
+import StructuredData from '@/components/StructuredData';
 import { getAllArticles, getAllCategories, getArticlesByCategory } from '@/lib/mdx';
 import { TrendingUp, Clock, Globe } from 'lucide-react';
 import { Metadata } from 'next';
+import { getItemListSchema } from '@/lib/structured-data';
 
 export const metadata: Metadata = {
   title: 'parho.net - AI-Powered News Summaries',
   description: 'Get the latest stories from The Guardian, summarized by AI into digestible 60-80 word summaries. Stay updated without the overwhelm.',
+  alternates: {
+    canonical: '/',
+  },
 };
 
 export default function HomePage() {
@@ -28,6 +33,7 @@ export default function HomePage() {
 
   return (
     <>
+      <StructuredData data={getItemListSchema(featuredArticles, 'Featured Stories')} />
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-primary-50 via-white to-accent-50 py-6 lg:py-8">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">

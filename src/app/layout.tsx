@@ -3,7 +3,9 @@ import { Inter, Playfair_Display } from 'next/font/google'
 import './globals.css'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import StructuredData from '@/components/StructuredData'
 import { getAllCategories } from '@/lib/mdx'
+import { getOrganizationSchema, getWebSiteSchema } from '@/lib/structured-data'
 
 const inter = Inter({ subsets: ['latin'] })
 const playfair = Playfair_Display({
@@ -12,6 +14,7 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://parho.net'),
   title: 'parho.net - Curated News Summaries',
   description: 'Stay informed with AI-powered news summaries from The Guardian. Get the latest stories in digestible formats across world news, technology, politics, and more.',
   keywords: 'news, summaries, guardian, AI, current events, world news, technology, politics',
@@ -19,6 +22,9 @@ export const metadata: Metadata = {
   creator: 'Owais',
   publisher: 'parho.net',
   robots: 'index, follow',
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
     type: 'website',
     locale: 'en_US',
@@ -67,6 +73,7 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased">
+        <StructuredData data={[getOrganizationSchema(), getWebSiteSchema()]} />
         <div className="min-h-screen flex flex-col">
           <Header categories={categories} />
           <main className="flex-1 pt-16">
