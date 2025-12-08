@@ -72,14 +72,21 @@ export function getAllArticles(): Article[] {
   return articles;
 }
 
+// Helper function to generate URL-safe slugs
+function generateSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 // Get articles by category
 export function getArticlesByCategory(categorySlug: string): Article[] {
   const allArticles = getAllArticles();
 
   return allArticles.filter((article) => {
-    const articleCategorySlug = article.category
-      .toLowerCase()
-      .replace(/\s+/g, '-');
+    const articleCategorySlug = generateSlug(article.category);
     return articleCategorySlug === categorySlug;
   });
 }
@@ -98,9 +105,7 @@ export function getAllCategories(): Category[] {
   const categoryMap = new Map<string, { name: string; count: number; latestPostDate: string }>();
 
   allArticles.forEach((article) => {
-    const categorySlug = article.category
-      .toLowerCase()
-      .replace(/\s+/g, '-');
+    const categorySlug = generateSlug(article.category);
 
     if (categoryMap.has(categorySlug)) {
       const existing = categoryMap.get(categorySlug)!;
