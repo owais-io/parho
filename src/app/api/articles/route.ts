@@ -1,47 +1,81 @@
 import { NextResponse } from 'next/server';
-import { getArticlesPaginated, deleteArticle, deleteArticles } from '@/lib/db';
+import { getAllArticles, getArticlesPaginated, deleteArticle, deleteArticles } from '@/lib/db';
 
 // Force dynamic rendering - required for database access
 export const dynamic = 'force-dynamic';
 
-// GET - Retrieve articles from database with pagination
+// GET - Retrieve articles from database with optional pagination
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
+    const fetchAll = searchParams.get('all') === 'true';
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '100', 10);
 
-    // Validate pagination parameters
-    const validPage = Math.max(1, page);
-    const validLimit = Math.min(Math.max(1, limit), 500); // Max 500 per page
+    let articles;
+    let total;
+    let responseData;
 
-    const result = getArticlesPaginated(validPage, validLimit);
+    if (fetchAll) {
+      // Fetch all articles without pagination
+      articles = getAllArticles();
+      total = articles.length;
 
-    // Transform articles to match the frontend format
-    const transformedArticles = result.articles.map(article => ({
-      id: article.id,
-      type: article.type,
-      sectionId: article.sectionId,
-      sectionName: article.sectionName,
-      webPublicationDate: article.webPublicationDate,
-      webTitle: article.webTitle,
-      webUrl: article.webUrl,
-      pillarId: article.pillarId,
-      pillarName: article.pillarName,
-      fields: {
-        thumbnail: article.thumbnail,
-        trailText: article.trailText,
-        byline: article.byline,
-      }
-    }));
+      responseData = {
+        success: true,
+        articles: articles.map(article => ({
+          id: article.id,
+          type: article.type,
+          sectionId: article.sectionId,
+          sectionName: article.sectionName,
+          webPublicationDate: article.webPublicationDate,
+          webTitle: article.webTitle,
+          webUrl: article.webUrl,
+          pillarId: article.pillarId,
+          pillarName: article.pillarName,
+          fields: {
+            thumbnail: article.thumbnail,
+            trailText: article.trailText,
+            byline: article.byline,
+          }
+        })),
+        total,
+      };
+    } else {
+      // Use pagination
+      const validPage = Math.max(1, page);
+      const validLimit = Math.min(Math.max(1, limit), 500); // Max 500 per page
 
-    return NextResponse.json({
-      success: true,
-      articles: transformedArticles,
-      total: result.total,
-      page: result.page,
-      totalPages: result.totalPages,
-    });
+      const result = getArticlesPaginated(validPage, validLimit);
+
+      // Transform articles to match the frontend format
+      const transformedArticles = result.articles.map(article => ({
+        id: article.id,
+        type: article.type,
+        sectionId: article.sectionId,
+        sectionName: article.sectionName,
+        webPublicationDate: article.webPublicationDate,
+        webTitle: article.webTitle,
+        webUrl: article.webUrl,
+        pillarId: article.pillarId,
+        pillarName: article.pillarName,
+        fields: {
+          thumbnail: article.thumbnail,
+          trailText: article.trailText,
+          byline: article.byline,
+        }
+      }));
+
+      responseData = {
+        success: true,
+        articles: transformedArticles,
+        total: result.total,
+        page: result.page,
+        totalPages: result.totalPages,
+      };
+    }
+
+    return NextResponse.json(responseData);
 
   } catch (error) {
     console.error('Database Error:', error);

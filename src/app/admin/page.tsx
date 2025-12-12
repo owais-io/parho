@@ -41,27 +41,24 @@ export default function AdminPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [totalArticles, setTotalArticles] = useState(0);
   const [selectedDays, setSelectedDays] = useState<number>(1);
-  const [currentPage, setCurrentPage] = useState<number>(1);
   const [selectedSections, setSelectedSections] = useState<Set<string>>(new Set());
   const [showSectionDropdown, setShowSectionDropdown] = useState(false);
   const [showDateDropdown, setShowDateDropdown] = useState(false);
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [metrics, setMetrics] = useState<ProcessingMetrics | null>(null);
-  const articlesPerPage = 100;
 
-  // Load articles from database with pagination
-  const loadArticlesFromDB = async (page: number = 1) => {
+  // Load all articles from database
+  const loadArticlesFromDB = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/articles?page=${page}&limit=${articlesPerPage}`);
+      const response = await fetch('/api/articles?all=true');
       const data = await response.json();
 
       if (data.success) {
         setArticles(data.articles);
         setTotalArticles(data.total);
-        setCurrentPage(page);
       } else {
         setError(data.error || 'Failed to load articles');
       }
@@ -88,7 +85,7 @@ export default function AdminPage() {
         setSuccess(message);
 
         // Reload from database to show saved articles
-        await loadArticlesFromDB(1);
+        await loadArticlesFromDB();
 
         // Clear success message after 5 seconds
         setTimeout(() => setSuccess(null), 5000);
@@ -118,7 +115,7 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    loadArticlesFromDB(1);
+    loadArticlesFromDB();
     loadMetrics();
   }, []);
 
@@ -140,14 +137,14 @@ export default function AdminPage() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      // Select all articles on current page
+      // Select all visible articles
       const newSelected = new Set(selectedArticles);
-      articles.forEach(article => newSelected.add(article.id));
+      filteredArticles.forEach(article => newSelected.add(article.id));
       setSelectedArticles(newSelected);
     } else {
-      // Deselect all articles on current page
+      // Deselect all visible articles
       const newSelected = new Set(selectedArticles);
-      articles.forEach(article => newSelected.delete(article.id));
+      filteredArticles.forEach(article => newSelected.delete(article.id));
       setSelectedArticles(newSelected);
     }
   };
@@ -368,7 +365,7 @@ export default function AdminPage() {
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
 
-  // Client-side filtering (only filters current page)
+  // Client-side filtering
   const filteredArticles = articles.filter(article => {
     // Section filter
     const matchesSection = selectedSections.size === 0 || selectedSections.has(article.sectionName);
@@ -398,14 +395,10 @@ export default function AdminPage() {
     return matchesSection && matchesDate;
   });
 
-  // Pagination is server-side
-  const totalPages = Math.ceil(totalArticles / articlesPerPage);
-  const paginatedArticles = filteredArticles;
-
-  // Check if all articles on current page are selected
-  const selectedOnPage = paginatedArticles.filter(article => selectedArticles.has(article.id)).length;
-  const allSelected = paginatedArticles.length > 0 && selectedOnPage === paginatedArticles.length;
-  const someSelected = selectedOnPage > 0 && selectedOnPage < paginatedArticles.length;
+  // Check if all visible articles are selected
+  const selectedOnPage = filteredArticles.filter(article => selectedArticles.has(article.id)).length;
+  const allSelected = filteredArticles.length > 0 && selectedOnPage === filteredArticles.length;
+  const someSelected = selectedOnPage > 0 && selectedOnPage < filteredArticles.length;
   const isProcessing = processingQueue.some(item => item.status === 'processing');
 
   return (
@@ -565,7 +558,7 @@ export default function AdminPage() {
                 View Summaries
               </a>
               <button
-                onClick={() => loadArticlesFromDB(currentPage)}
+                onClick={() => loadArticlesFromDB()}
                 disabled={loading}
                 className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -707,12 +700,8 @@ export default function AdminPage() {
                 <p className="text-2xl font-bold text-gray-900">{totalArticles.toLocaleString()}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Current Page</p>
-                <p className="text-2xl font-bold text-gray-900">{articles.length}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Current Page</p>
-                <p className="text-2xl font-bold text-gray-900">{currentPage}/{totalPages}</p>
+                <p className="text-sm text-gray-600">Displayed</p>
+                <p className="text-2xl font-bold text-gray-900">{filteredArticles.length.toLocaleString()}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">Selected</p>
@@ -813,7 +802,7 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {paginatedArticles.map((article) => (
+                    {filteredArticles.map((article) => (
                     <tr
                       key={article.id}
                       className={`hover:bg-gray-50 transition-colors ${
@@ -892,80 +881,6 @@ export default function AdminPage() {
                 </table>
               </div>
             </div>
-
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mt-4">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-600">
-                    Showing {((currentPage - 1) * articlesPerPage) + 1} to {Math.min(currentPage * articlesPerPage, totalArticles)} of {totalArticles} articles
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => loadArticlesFromDB(1)}
-                      disabled={currentPage === 1 || loading}
-                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      First
-                    </button>
-                    <button
-                      onClick={() => loadArticlesFromDB(currentPage - 1)}
-                      disabled={currentPage === 1 || loading}
-                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      Previous
-                    </button>
-
-                    {/* Page numbers */}
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        let pageNum;
-                        if (totalPages <= 5) {
-                          pageNum = i + 1;
-                        } else if (currentPage <= 3) {
-                          pageNum = i + 1;
-                        } else if (currentPage >= totalPages - 2) {
-                          pageNum = totalPages - 4 + i;
-                        } else {
-                          pageNum = currentPage - 2 + i;
-                        }
-
-                        return (
-                          <button
-                            key={pageNum}
-                            onClick={() => loadArticlesFromDB(pageNum)}
-                            disabled={loading}
-                            className={`px-3 py-2 text-sm border rounded-lg transition-colors ${
-                              currentPage === pageNum
-                                ? 'bg-blue-600 text-white border-blue-600'
-                                : 'border-gray-300 hover:bg-gray-50'
-                            } disabled:opacity-50 disabled:cursor-not-allowed`}
-                          >
-                            {pageNum}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <button
-                      onClick={() => loadArticlesFromDB(currentPage + 1)}
-                      disabled={currentPage === totalPages || loading}
-                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      Next
-                    </button>
-                    <button
-                      onClick={() => loadArticlesFromDB(totalPages)}
-                      disabled={currentPage === totalPages || loading}
-                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      Last
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </>
         )}
 
