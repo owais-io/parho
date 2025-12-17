@@ -1,8 +1,7 @@
 import { notFound } from 'next/navigation';
 import CategoryArticleGrid from '@/components/CategoryArticleGrid';
 import StructuredData from '@/components/StructuredData';
-import { getAllArticles, getAllCategories, getCategoryBySlug } from '@/lib/mdx';
-import { Article } from '@/types';
+import { getArticlesByCategory, getAllCategories, getCategoryBySlug } from '@/lib/mdx';
 import { ArrowLeft, FileText, Calendar, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import { Metadata } from 'next';
@@ -48,15 +47,8 @@ export default function CategoryPage({ params }: CategoryPageProps) {
     notFound();
   }
 
-  const allArticles = getAllArticles();
-
-  // Filter articles by category
-  const categoryArticles = allArticles.filter((article: Article) => {
-    const articleCategorySlug = article.category
-      .toLowerCase()
-      .replace(/\s+/g, '-');
-    return articleCategorySlug === params.slug;
-  });
+  // Get articles for this category using the proper slug generation
+  const categoryArticles = getArticlesByCategory(params.slug);
 
   const latestArticle = categoryArticles[0];
 
