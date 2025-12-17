@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     // Calculate date range
     const today = new Date();
     const startDate = new Date();
-    startDate.setDate(today.getDate() - days);
+    startDate.setDate(today.getDate() - (days - 1));
     const fromDate = startDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
 
     // Use tomorrow's date to ensure we get all articles published today
