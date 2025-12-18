@@ -40,7 +40,7 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [totalArticles, setTotalArticles] = useState(0);
-  const [selectedDays, setSelectedDays] = useState<number>(1);
+  const [selectedDays, setSelectedDays] = useState<number>(4);
   const [selectedSections, setSelectedSections] = useState<Set<string>>(new Set());
   const [showSectionDropdown, setShowSectionDropdown] = useState(false);
   const [showDateDropdown, setShowDateDropdown] = useState(false);
@@ -434,7 +434,7 @@ export default function AdminPage() {
                   onChange={(e) => setSelectedDays(Number(e.target.value))}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value={1}>Last 24 hours</option>
+                  <option value={4}>Last 24 hours</option>
                   <option value={3}>Last 3 days</option>
                   <option value={7}>Last 7 days</option>
                   <option value={15}>Last 15 days</option>
