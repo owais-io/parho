@@ -579,6 +579,61 @@ export default function AdminPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        {/* Stats and Actions Bar */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <div>
+                <p className="text-sm text-gray-600">Total Articles</p>
+                <p className="text-2xl font-bold text-gray-900">{totalArticles.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Displayed</p>
+                <p className="text-2xl font-bold text-gray-900">{filteredArticles.length.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Selected</p>
+                <p className="text-2xl font-bold text-blue-600">{selectedArticles.size}</p>
+              </div>
+              <div className="border-l border-gray-300 pl-6">
+                <p className="text-sm text-gray-600">Avg Processing Time (Last 10)</p>
+                {metrics && metrics.count > 0 ? (
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-2xl font-bold text-green-600">
+                      {metrics.averageMinutes ? metrics.averageMinutes.toFixed(1) : '—'}
+                    </p>
+                    <p className="text-sm text-gray-500">min</p>
+                    <p className="text-xs text-gray-400">
+                      ({metrics.count} {metrics.count === 1 ? 'article' : 'articles'})
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-2xl font-bold text-gray-400">—</p>
+                )}
+              </div>
+            </div>
+
+            {selectedArticles.size > 0 && (
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleBulkProcess}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <Cpu className="w-4 h-4" />
+                  Process Selected ({selectedArticles.size})
+                </button>
+                <button
+                  onClick={handleBulkDelete}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Selected ({selectedArticles.size})
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Processing Queue */}
         {processingQueue.length > 0 && (
           <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border-2 border-green-200 p-6 mb-6">
@@ -690,61 +745,6 @@ export default function AdminPage() {
             </div>
           </div>
         )}
-
-        {/* Stats and Actions Bar */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <div>
-                <p className="text-sm text-gray-600">Total Articles</p>
-                <p className="text-2xl font-bold text-gray-900">{totalArticles.toLocaleString()}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Displayed</p>
-                <p className="text-2xl font-bold text-gray-900">{filteredArticles.length.toLocaleString()}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Selected</p>
-                <p className="text-2xl font-bold text-blue-600">{selectedArticles.size}</p>
-              </div>
-              <div className="border-l border-gray-300 pl-6">
-                <p className="text-sm text-gray-600">Avg Processing Time (Last 10)</p>
-                {metrics && metrics.count > 0 ? (
-                  <div className="flex items-baseline gap-2">
-                    <p className="text-2xl font-bold text-green-600">
-                      {metrics.averageMinutes ? metrics.averageMinutes.toFixed(1) : '—'}
-                    </p>
-                    <p className="text-sm text-gray-500">min</p>
-                    <p className="text-xs text-gray-400">
-                      ({metrics.count} {metrics.count === 1 ? 'article' : 'articles'})
-                    </p>
-                  </div>
-                ) : (
-                  <p className="text-2xl font-bold text-gray-400">—</p>
-                )}
-              </div>
-            </div>
-
-            {selectedArticles.size > 0 && (
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleBulkProcess}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  <Cpu className="w-4 h-4" />
-                  Process Selected ({selectedArticles.size})
-                </button>
-                <button
-                  onClick={handleBulkDelete}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Delete Selected ({selectedArticles.size})
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* Error Message */}
         {error && (
