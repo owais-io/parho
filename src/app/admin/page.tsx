@@ -354,6 +354,12 @@ export default function AdminPage() {
     }).format(date);
   };
 
+  const formatProcessingTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
   // Extract unique sections with article counts
   const sectionCounts = articles.reduce<Record<string, number>>((acc, article) => {
     const section = article.sectionName;
@@ -597,10 +603,10 @@ export default function AdminPage() {
               </div>
               <div className="border-l border-gray-300 pl-6">
                 <p className="text-sm text-gray-600">Avg Processing Time (Last 10)</p>
-                {metrics && metrics.count > 0 ? (
+                {metrics && metrics.count > 0 && metrics.averageSeconds ? (
                   <div className="flex items-baseline gap-2">
                     <p className="text-2xl font-bold text-green-600">
-                      {metrics.averageMinutes ? metrics.averageMinutes.toFixed(1) : '—'}
+                      {formatProcessingTime(metrics.averageSeconds)}
                     </p>
                     <p className="text-sm text-gray-500">min</p>
                     <p className="text-xs text-gray-400">
