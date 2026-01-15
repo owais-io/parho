@@ -26,7 +26,10 @@
       "Bash(git checkout:*)",
       "Bash(cd:*)",
       "Bash(node test-metrics.js:*)",
-      "Bash(del:*)"
+      "Bash(del:*)",
+      "Bash(grep:*)",
+      "Bash(xargs sed:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []

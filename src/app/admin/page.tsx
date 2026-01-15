@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Clock, Trash2, RefreshCw, Download, Cpu, Link as LinkIcon, X } from 'lucide-react';
+import { Clock, Trash2, RefreshCw, Download, Cpu, Link as LinkIcon, X, Sparkles } from 'lucide-react';
 
 interface GuardianArticle {
   id: string;
@@ -32,6 +32,23 @@ interface ProcessingMetrics {
   maxSeconds: number | null;
 }
 
+interface CategoryGenStatus {
+  totalMDXFiles: number;
+  filesWithoutCategory: number;
+  filesWithCategory: number;
+}
+
+interface CategoryGenProgress {
+  isRunning: boolean;
+  current: number;
+  total: number;
+  currentFile: string;
+  currentTitle: string;
+  lastCategory: string;
+  processed: number;
+  errors: number;
+}
+
 export default function AdminPage() {
   const [articles, setArticles] = useState<GuardianArticle[]>([]);
   const [selectedArticles, setSelectedArticles] = useState<Set<string>>(new Set());
@@ -47,6 +64,17 @@ export default function AdminPage() {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [metrics, setMetrics] = useState<ProcessingMetrics | null>(null);
+  const [categoryGenStatus, setCategoryGenStatus] = useState<CategoryGenStatus | null>(null);
+  const [categoryGenProgress, setCategoryGenProgress] = useState<CategoryGenProgress>({
+    isRunning: false,
+    current: 0,
+    total: 0,
+    currentFile: '',
+    currentTitle: '',
+    lastCategory: '',
+    processed: 0,
+    errors: 0,
+  });
 
   // Load all articles from database
   const loadArticlesFromDB = async () => {
@@ -114,9 +142,118 @@ export default function AdminPage() {
     }
   };
 
+  // Load category generation status
+  const loadCategoryGenStatus = async () => {
+    try {
+      const response = await fetch('/api/generate-categories');
+      const data = await response.json();
+
+      if (data.success) {
+        setCategoryGenStatus(data);
+      }
+    } catch (err) {
+      console.error('Failed to load category generation status:', err);
+    }
+  };
+
+  // Start category generation
+  const startCategoryGeneration = async () => {
+    setCategoryGenProgress({
+      isRunning: true,
+      current: 0,
+      total: 0,
+      currentFile: '',
+      currentTitle: '',
+      lastCategory: '',
+      processed: 0,
+      errors: 0,
+    });
+
+    try {
+      const response = await fetch('/api/generate-categories', {
+        method: 'POST',
+      });
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('No response body');
+      }
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const text = decoder.decode(value);
+        const lines = text.split('\n').filter(line => line.startsWith('data: '));
+
+        for (const line of lines) {
+          try {
+            const data = JSON.parse(line.replace('data: ', ''));
+
+            if (data.type === 'start') {
+              setCategoryGenProgress(prev => ({
+                ...prev,
+                total: data.total,
+              }));
+            } else if (data.type === 'processing') {
+              setCategoryGenProgress(prev => ({
+                ...prev,
+                current: data.current,
+                total: data.total,
+                currentFile: data.filename,
+                currentTitle: data.title,
+              }));
+            } else if (data.type === 'processed') {
+              setCategoryGenProgress(prev => ({
+                ...prev,
+                current: data.current,
+                total: data.total,
+                lastCategory: data.category,
+                processed: prev.processed + 1,
+              }));
+            } else if (data.type === 'error' && data.current) {
+              setCategoryGenProgress(prev => ({
+                ...prev,
+                current: data.current,
+                errors: prev.errors + 1,
+              }));
+            } else if (data.type === 'complete') {
+              setCategoryGenProgress(prev => ({
+                ...prev,
+                isRunning: false,
+                processed: data.processed - (data.errors || 0),
+                errors: data.errors || 0,
+              }));
+              // Refresh status after completion
+              loadCategoryGenStatus();
+            } else if (data.type === 'error' && data.message) {
+              setError(data.message);
+              setCategoryGenProgress(prev => ({
+                ...prev,
+                isRunning: false,
+              }));
+            }
+          } catch (parseErr) {
+            console.error('Failed to parse SSE data:', parseErr);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Category generation error:', err);
+      setError('Failed to start category generation');
+      setCategoryGenProgress(prev => ({
+        ...prev,
+        isRunning: false,
+      }));
+    }
+  };
+
   useEffect(() => {
     loadArticlesFromDB();
     loadMetrics();
+    loadCategoryGenStatus();
   }, []);
 
   // Close dropdowns when clicking outside
@@ -751,6 +888,97 @@ export default function AdminPage() {
             </div>
           </div>
         )}
+
+        {/* Category Generation Section */}
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border-2 border-purple-200 p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-purple-600" />
+                Generate AI Categories for MDX Files
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                One-time category generation for articles without Ollama-generated categories
+              </p>
+            </div>
+            <button
+              onClick={startCategoryGeneration}
+              disabled={categoryGenProgress.isRunning || (categoryGenStatus?.filesWithoutCategory === 0)}
+              className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            >
+              <Sparkles className={`w-5 h-5 ${categoryGenProgress.isRunning ? 'animate-spin' : ''}`} />
+              {categoryGenProgress.isRunning ? 'Generating...' : 'Generate Categories'}
+            </button>
+          </div>
+
+          {/* Status */}
+          {categoryGenStatus && (
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <div className="bg-white rounded-lg p-4 border border-purple-100">
+                <p className="text-sm text-gray-600">Total MDX Files</p>
+                <p className="text-2xl font-bold text-gray-900">{categoryGenStatus.totalMDXFiles.toLocaleString()}</p>
+              </div>
+              <div className="bg-white rounded-lg p-4 border border-purple-100">
+                <p className="text-sm text-gray-600">With Category</p>
+                <p className="text-2xl font-bold text-green-600">{categoryGenStatus.filesWithCategory.toLocaleString()}</p>
+              </div>
+              <div className="bg-white rounded-lg p-4 border border-purple-100">
+                <p className="text-sm text-gray-600">Need Category</p>
+                <p className="text-2xl font-bold text-orange-600">{categoryGenStatus.filesWithoutCategory.toLocaleString()}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Progress */}
+          {categoryGenProgress.isRunning && (
+            <div className="bg-white rounded-lg p-4 border border-purple-200">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">
+                  Processing {categoryGenProgress.current} of {categoryGenProgress.total}
+                </span>
+                <span className="text-sm text-gray-500">
+                  {categoryGenProgress.total > 0
+                    ? `${Math.round((categoryGenProgress.current / categoryGenProgress.total) * 100)}%`
+                    : '0%'}
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
+                <div
+                  className="bg-purple-600 h-3 rounded-full transition-all duration-300"
+                  style={{
+                    width: categoryGenProgress.total > 0
+                      ? `${(categoryGenProgress.current / categoryGenProgress.total) * 100}%`
+                      : '0%'
+                  }}
+                ></div>
+              </div>
+              {categoryGenProgress.currentTitle && (
+                <div className="text-sm text-gray-600 truncate">
+                  <span className="font-medium">Current:</span> {categoryGenProgress.currentTitle}
+                </div>
+              )}
+              {categoryGenProgress.lastCategory && (
+                <div className="text-sm text-purple-600 mt-1">
+                  <span className="font-medium">Last category:</span> {categoryGenProgress.lastCategory}
+                </div>
+              )}
+              <div className="flex gap-4 mt-2 text-xs text-gray-500">
+                <span>Successful: {categoryGenProgress.processed}</span>
+                {categoryGenProgress.errors > 0 && (
+                  <span className="text-red-500">Errors: {categoryGenProgress.errors}</span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Completion message */}
+          {!categoryGenProgress.isRunning && categoryGenProgress.processed > 0 && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-green-800">
+              Category generation complete! {categoryGenProgress.processed} categories generated
+              {categoryGenProgress.errors > 0 && `, ${categoryGenProgress.errors} errors`}.
+            </div>
+          )}
+        </div>
 
         {/* Error Message */}
         {error && (

@@ -10,6 +10,7 @@ interface Summary {
   transformedTitle: string;
   summary: string;
   section: string | null;
+  category: string | null;
   imageUrl: string | null;
   publishedDate: string | null;
   processedAt: string;
@@ -88,6 +89,7 @@ export default function SummariesPage() {
           title: summary.transformedTitle,
           summary: summary.summary,
           section: summary.section,
+          category: summary.category,
           imageUrl: summary.imageUrl,
           publishedDate: summary.publishedDate,
         }),
@@ -165,6 +167,7 @@ export default function SummariesPage() {
             title: summary.transformedTitle,
             summary: summary.summary,
             section: summary.section,
+            category: summary.category,
             imageUrl: summary.imageUrl,
             publishedDate: summary.publishedDate,
           }),
@@ -395,9 +398,9 @@ export default function SummariesPage() {
                     {/* Summary Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start gap-2 mb-1">
-                        {summary.section && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 flex-shrink-0">
-                            {summary.section}
+                        {(summary.category || summary.section) && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 flex-shrink-0">
+                            {summary.category || summary.section}
                           </span>
                         )}
                         <h3 className="text-sm font-bold text-gray-900 line-clamp-1">

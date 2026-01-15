@@ -97,6 +97,13 @@ try {
   // Column already exists, ignore error
 }
 
+// Add category column to existing summaries table (migration)
+try {
+  db.exec(`ALTER TABLE summaries ADD COLUMN category TEXT`);
+} catch (error) {
+  // Column already exists, ignore error
+}
+
 export interface Article {
   id: string;
   type: string;
@@ -120,6 +127,7 @@ export interface Summary {
   transformedTitle: string;
   summary: string;
   section: string | null;
+  category: string | null;
   imageUrl: string | null;
   publishedDate: string | null;
   processedAt: string;
@@ -268,14 +276,15 @@ export function saveSummary(data: {
   transformedTitle: string;
   summary: string;
   section?: string;
+  category?: string;
   imageUrl?: string;
   publishedDate?: string;
   processingDurationSeconds?: number;
 }) {
   const stmt = db.prepare(`
     INSERT OR REPLACE INTO summaries (
-      guardianId, transformedTitle, summary, section, imageUrl, publishedDate, processingDurationSeconds
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      guardianId, transformedTitle, summary, section, category, imageUrl, publishedDate, processingDurationSeconds
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   return stmt.run(
@@ -283,6 +292,7 @@ export function saveSummary(data: {
     data.transformedTitle,
     data.summary,
     data.section || null,
+    data.category || null,
     data.imageUrl || null,
     data.publishedDate || null,
     data.processingDurationSeconds || null

@@ -10,6 +10,7 @@ interface MDXFrontmatter {
   title: string;
   summary: string;
   section: string;
+  category?: string;
   imageUrl: string;
   publishedAt: string;
   guardianId: string;
@@ -38,12 +39,13 @@ export function parseMDXFile(filename: string): Article | null {
     const slug = filename.replace(/\.mdx$/, '');
 
     // Convert to Article format
+    // Use category from Ollama if available, otherwise fall back to section
     const article: Article = {
       id: frontmatter.guardianId || slug,
       title: frontmatter.title,
       summary: frontmatter.summary,
       imageUrl: frontmatter.imageUrl || '',
-      category: frontmatter.section || 'News',
+      category: frontmatter.category || frontmatter.section || 'News',
       publishedAt: frontmatter.publishedAt,
       slug,
     };
