@@ -32,7 +32,10 @@
       "Bash(ls:*)",
       "Bash(find:*)",
       "Bash(xargs:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(for f in *.mdx)",
+      "Bash(do sed -i 's/^category: Politics$/category: Domestic Politics/' \"$f\")",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []
