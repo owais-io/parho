@@ -1,6 +1,12 @@
-Crime
+American Football
+Business
+Charity
+Cricket
+Crime & Justice
 Culture
+Defense
 Economy
+Education
 Energy
 Entertainment
 Environment
@@ -8,19 +14,27 @@ Food
 Football
 Geopolitics
 Government
-Healthcare
+Health
 Housing
 Human Rights
 Immigration
-Infrastructure
 Iran
 Labor
 Law
 Media
 Middle East
+Natural Disasters
+News
 Policing
 Politics
+Rugby
 Science
 Sports
 Technology
 Tennis
+Terrorism
+Trade
+Transport
+Travel
+Weather
+Wildlife

@@ -29,7 +29,10 @@
       "Bash(del:*)",
       "Bash(grep:*)",
       "Bash(xargs sed:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(xargs:*)",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": []
