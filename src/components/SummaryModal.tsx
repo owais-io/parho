@@ -112,8 +112,7 @@ export default function SummaryModal({ article, isOpen, onClose }: SummaryModalP
                 </button>
                 <button
                   onClick={() => {
-                    // In a real implementation, this would link to the full Guardian article
-                    window.open(`https://www.theguardian.com/${article.slug}`, '_blank');
+                    window.open(`https://www.theguardian.com/${article.guardianId}`, '_blank');
                   }}
                   className="flex-1 load-more-btn text-white px-6 py-3 font-medium rounded-lg"
                 >

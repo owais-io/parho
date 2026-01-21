@@ -48,6 +48,7 @@ export function parseMDXFile(filename: string): Article | null {
       category: frontmatter.category || frontmatter.section || 'News',
       publishedAt: frontmatter.publishedAt,
       slug,
+      guardianId: frontmatter.guardianId || slug,
     };
 
     return article;

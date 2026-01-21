@@ -27,6 +27,8 @@ interface QueueItem {
 interface ProcessingMetrics {
   averageSeconds: number | null;
   averageMinutes: number | null;
+  totalSeconds: number | null;
+  totalMinutes: number | null;
   count: number;
   minSeconds: number | null;
   maxSeconds: number | null;
@@ -131,7 +133,7 @@ export default function AdminPage() {
   // Load processing metrics
   const loadMetrics = async () => {
     try {
-      const response = await fetch('/api/metrics?limit=10');
+      const response = await fetch('/api/metrics');
       const data = await response.json();
 
       if (data.success) {
@@ -497,6 +499,21 @@ export default function AdminPage() {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
+  const formatDuration = (seconds: number): string => {
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+
+    const parts: string[] = [];
+    if (days > 0) parts.push(`${days}d`);
+    if (hours > 0) parts.push(`${hours}h`);
+    if (minutes > 0) parts.push(`${minutes}m`);
+    if (secs > 0 || parts.length === 0) parts.push(`${secs}s`);
+
+    return parts.join(' ');
+  };
+
   // Extract unique sections with article counts
   const sectionCounts = articles.reduce<Record<string, number>>((acc, article) => {
     const section = article.sectionName;
@@ -739,17 +756,36 @@ export default function AdminPage() {
                 <p className="text-2xl font-bold text-blue-600">{selectedArticles.size}</p>
               </div>
               <div className="border-l border-gray-300 pl-6">
-                <p className="text-sm text-gray-600">Avg Processing Time (Last 10)</p>
+                <p className="text-sm text-gray-600">
+                  Avg Processing Time {metrics && metrics.count > 0 ? `(Last ${metrics.count})` : ''}
+                </p>
                 {metrics && metrics.count > 0 && metrics.averageSeconds ? (
                   <div className="flex items-baseline gap-2">
                     <p className="text-2xl font-bold text-green-600">
                       {formatProcessingTime(metrics.averageSeconds)}
                     </p>
                     <p className="text-sm text-gray-500">min</p>
-                    <p className="text-xs text-gray-400">
-                      ({metrics.count} {metrics.count === 1 ? 'article' : 'articles'})
-                    </p>
                   </div>
+                ) : (
+                  <p className="text-2xl font-bold text-gray-400">—</p>
+                )}
+              </div>
+              <div className="border-l border-gray-300 pl-6">
+                <p className="text-sm text-gray-600">Total Processing Time</p>
+                {metrics && metrics.count > 0 && metrics.totalSeconds ? (
+                  <p className="text-2xl font-bold text-blue-600">
+                    {formatDuration(metrics.totalSeconds)}
+                  </p>
+                ) : (
+                  <p className="text-2xl font-bold text-gray-400">—</p>
+                )}
+              </div>
+              <div className="border-l border-gray-300 pl-6">
+                <p className="text-sm text-gray-600">Est. Time Remaining</p>
+                {metrics && metrics.count > 0 && metrics.averageSeconds && totalArticles > 0 ? (
+                  <p className="text-2xl font-bold text-orange-600">
+                    {formatDuration(totalArticles * metrics.averageSeconds)}
+                  </p>
                 ) : (
                   <p className="text-2xl font-bold text-gray-400">—</p>
                 )}

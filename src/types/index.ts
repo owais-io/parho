@@ -6,6 +6,7 @@ export interface Article {
   category: string;
   publishedAt: string;
   slug: string;
+  guardianId: string;
 }
 
 export interface Category {

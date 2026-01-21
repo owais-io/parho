@@ -332,29 +332,46 @@ export function countSummaries(): number {
 }
 
 // Get average processing time of latest N summaries
-export function getAverageProcessingTime(limit: number = 10): {
+export function getAverageProcessingTime(limit: number = 0): {
   averageSeconds: number | null;
+  totalSeconds: number | null;
   count: number;
   minSeconds: number | null;
   maxSeconds: number | null;
 } {
-  const stmt = db.prepare(`
-    SELECT
-      AVG(processingDurationSeconds) as avgSeconds,
-      COUNT(processingDurationSeconds) as count,
-      MIN(processingDurationSeconds) as minSeconds,
-      MAX(processingDurationSeconds) as maxSeconds
-    FROM (
-      SELECT processingDurationSeconds
+  // If limit is 0, get all articles; otherwise limit to specified count
+  const query = limit > 0
+    ? `
+      SELECT
+        AVG(processingDurationSeconds) as avgSeconds,
+        SUM(processingDurationSeconds) as totalSeconds,
+        COUNT(processingDurationSeconds) as count,
+        MIN(processingDurationSeconds) as minSeconds,
+        MAX(processingDurationSeconds) as maxSeconds
+      FROM (
+        SELECT processingDurationSeconds
+        FROM summaries
+        WHERE processingDurationSeconds IS NOT NULL
+        ORDER BY processedAt DESC
+        LIMIT ?
+      )
+    `
+    : `
+      SELECT
+        AVG(processingDurationSeconds) as avgSeconds,
+        SUM(processingDurationSeconds) as totalSeconds,
+        COUNT(processingDurationSeconds) as count,
+        MIN(processingDurationSeconds) as minSeconds,
+        MAX(processingDurationSeconds) as maxSeconds
       FROM summaries
       WHERE processingDurationSeconds IS NOT NULL
-      ORDER BY processedAt DESC
-      LIMIT ?
-    )
-  `);
+    `;
 
-  const result = stmt.get(limit) as {
+  const stmt = db.prepare(query);
+
+  const result = (limit > 0 ? stmt.get(limit) : stmt.get()) as {
     avgSeconds: number | null;
+    totalSeconds: number | null;
     count: number;
     minSeconds: number | null;
     maxSeconds: number | null;
@@ -362,6 +379,7 @@ export function getAverageProcessingTime(limit: number = 10): {
 
   return {
     averageSeconds: result.avgSeconds,
+    totalSeconds: result.totalSeconds,
     count: result.count,
     minSeconds: result.minSeconds,
     maxSeconds: result.maxSeconds
