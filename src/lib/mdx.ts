@@ -5,6 +5,9 @@ import { Article, Category } from '@/types';
 
 const contentDirectory = path.join(process.cwd(), 'content', 'articles');
 
+// Cache for articles to avoid re-reading 6000+ files multiple times during build
+let articlesCache: Article[] | null = null;
+
 // Interface for MDX frontmatter
 interface MDXFrontmatter {
   title: string;
@@ -58,8 +61,13 @@ export function parseMDXFile(filename: string): Article | null {
   }
 }
 
-// Get all articles from MDX files
+// Get all articles from MDX files (with caching)
 export function getAllArticles(): Article[] {
+  // Return cached result if available
+  if (articlesCache !== null) {
+    return articlesCache;
+  }
+
   const files = getAllMDXFiles();
   const articles = files
     .map((filename) => parseMDXFile(filename))
@@ -71,6 +79,9 @@ export function getAllArticles(): Article[] {
     const dateB = new Date(b.publishedAt).getTime();
     return dateB - dateA;
   });
+
+  // Cache the result
+  articlesCache = articles;
 
   return articles;
 }
