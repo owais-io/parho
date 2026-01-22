@@ -35,7 +35,8 @@
       "Bash(python3:*)",
       "Bash(for f in *.mdx)",
       "Bash(do sed -i 's/^category: Politics$/category: Domestic Politics/' \"$f\")",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []
