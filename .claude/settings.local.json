@@ -37,7 +37,10 @@
       "Bash(do sed -i 's/^category: Politics$/category: Domestic Politics/' \"$f\")",
       "Bash(done)",
       "Bash(tree:*)",
-      "Bash(node update-categories.js:*)"
+      "Bash(node update-categories.js:*)",
+      "Bash(shuf)",
+      "Bash(# Extract titles from Crime & Justice articles grep -l ''category: \"\"Crime & Justice\"\"'' content/articles/*.mdx)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []

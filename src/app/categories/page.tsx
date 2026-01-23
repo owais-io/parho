@@ -1,7 +1,7 @@
-import CategoryCard from '@/components/CategoryCard';
+import CategorySorter from '@/components/CategorySorter';
 import { getAllCategories } from '@/lib/mdx';
 import { Metadata } from 'next';
-import { Grid, Filter } from 'lucide-react';
+import { Grid } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'All Categories - parho.net',
@@ -35,27 +35,7 @@ export default function CategoriesPage() {
       {/* Categories Grid */}
       <section className="py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">
-                {categories.length} Categories Available
-              </h2>
-              <p className="text-gray-600 mt-1">
-                Browse by topic to find the stories that matter to you
-              </p>
-            </div>
-            
-            <div className="flex items-center text-gray-600">
-              <Filter size={20} className="mr-2" />
-              <span className="text-sm">All categories</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {categories.map((category) => (
-              <CategoryCard key={category.id} category={category} />
-            ))}
-          </div>
+          <CategorySorter categories={categories} />
 
           {/* Additional Info */}
           <div className="mt-16 text-center">
