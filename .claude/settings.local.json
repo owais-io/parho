@@ -36,7 +36,8 @@
       "Bash(for f in *.mdx)",
       "Bash(do sed -i 's/^category: Politics$/category: Domestic Politics/' \"$f\")",
       "Bash(done)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(node update-categories.js:*)"
     ],
     "deny": [],
     "ask": []
