@@ -40,7 +40,13 @@
       "Bash(node update-categories.js:*)",
       "Bash(shuf)",
       "Bash(# Extract titles from Crime & Justice articles grep -l ''category: \"\"Crime & Justice\"\"'' content/articles/*.mdx)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(while read file)",
+      "Bash(do git show HEAD:\"$file\")",
+      "Bash(git grep:*)",
+      "Bash(then)",
+      "Bash(echo:*)"
     ],
     "deny": [],
     "ask": []
