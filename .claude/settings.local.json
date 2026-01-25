@@ -46,7 +46,13 @@
       "Bash(do git show HEAD:\"$file\")",
       "Bash(git grep:*)",
       "Bash(then)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(node test-categories.js:*)",
+      "Bash(do git show \"HEAD:$file\")",
+      "Bash(git diff:*)",
+      "Bash(git ls-files:*)",
+      "Bash(node /tmp/check-categories.js:*)",
+      "Bash(node check-categories.js:*)"
     ],
     "deny": [],
     "ask": []
