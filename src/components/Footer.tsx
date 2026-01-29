@@ -46,17 +46,17 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/categories/world-news" className="text-gray-300 hover:text-primary-400 transition-colors text-sm">
+                <Link href="/categories/international-relations-diplomacy" className="text-gray-300 hover:text-primary-400 transition-colors text-sm">
                   World News
                 </Link>
               </li>
               <li>
-                <Link href="/categories/technology" className="text-gray-300 hover:text-primary-400 transition-colors text-sm">
+                <Link href="/categories/artificial-intelligence-news" className="text-gray-300 hover:text-primary-400 transition-colors text-sm">
                   Technology
                 </Link>
               </li>
               <li>
-                <Link href="/categories/politics" className="text-gray-300 hover:text-primary-400 transition-colors text-sm">
+                <Link href="/categories/domestic-political-affairs" className="text-gray-300 hover:text-primary-400 transition-colors text-sm">
                   Politics
                 </Link>
               </li>
@@ -68,27 +68,27 @@ export default function Footer() {
             <h3 className="text-lg font-semibold mb-4">Popular Categories</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/categories/business" className="text-gray-300 hover:text-primary-400 transition-colors text-sm">
+                <Link href="/categories/stock-market-and-trading" className="text-gray-300 hover:text-primary-400 transition-colors text-sm">
                   Business
                 </Link>
               </li>
               <li>
-                <Link href="/categories/sports" className="text-gray-300 hover:text-primary-400 transition-colors text-sm">
+                <Link href="/categories/premier-league-match-reports" className="text-gray-300 hover:text-primary-400 transition-colors text-sm">
                   Sports
                 </Link>
               </li>
               <li>
-                <Link href="/categories/environment" className="text-gray-300 hover:text-primary-400 transition-colors text-sm">
+                <Link href="/categories/environment-and-climate" className="text-gray-300 hover:text-primary-400 transition-colors text-sm">
                   Environment
                 </Link>
               </li>
               <li>
-                <Link href="/categories/health" className="text-gray-300 hover:text-primary-400 transition-colors text-sm">
+                <Link href="/categories/nhs-healthcare-crisis" className="text-gray-300 hover:text-primary-400 transition-colors text-sm">
                   Health
                 </Link>
               </li>
               <li>
-                <Link href="/categories/culture" className="text-gray-300 hover:text-primary-400 transition-colors text-sm">
+                <Link href="/categories/media-and-journalism" className="text-gray-300 hover:text-primary-400 transition-colors text-sm">
                   Culture
                 </Link>
               </li>

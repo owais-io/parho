@@ -52,7 +52,17 @@
       "Bash(git diff:*)",
       "Bash(git ls-files:*)",
       "Bash(node /tmp/check-categories.js:*)",
-      "Bash(node check-categories.js:*)"
+      "Bash(node check-categories.js:*)",
+      "Bash(do grep -m1 \"^category:\" \"$file\")",
+      "Bash(# Get all malformed files and their category lines git ls-files --others --exclude-standard content/articles/ | xargs grep -h ''category: \"\".*category:'')",
+      "Bash(do echo \"=== $file ===\" grep \"^category:\" \"$file\" done)",
+      "Bash(then echo \"Found: $file\" grep \"^category:\" \"$file\" fi done)",
+      "Bash(# Check hexdump to see if there''s special character git ls-files --others --exclude-standard content/articles/ | xargs grep -h \"\"^category:\"\")",
+      "Bash(# Get all unique categories and test their slugs echo \"\"Testing category URLs...\"\" echo \"\"\"\" git ls-files --others --exclude-standard content/articles/ | xargs grep -h \"\"^category:\"\")",
+      "Bash(# Get unique categories and their slugs git ls-files --others --exclude-standard content/articles/ | xargs grep -h \"\"^category:\"\")",
+      "Bash(# Get ALL categories from both committed and new articles echo \"\"Checking ALL categories in the system...\"\" # Get categories from committed articles git ls-files content/articles/ | xargs grep -h \"\"^category:\"\")",
+      "Bash(# Fetch the categories page and extract category links echo \"\"Checking categories displayed on /categories page...\"\" echo \"\"\"\" # Get the categories page HTML and extract hrefs to category pages curl -s http://localhost:3000/categories)",
+      "Bash(# Final comprehensive test echo \"\"=== FINAL COMPREHENSIVE TEST ===\"\" echo \"\"\"\" # Fetch all category links from the page curl -s http://localhost:3000/categories)"
     ],
     "deny": [],
     "ask": []
