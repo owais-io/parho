@@ -62,7 +62,11 @@
       "Bash(# Get unique categories and their slugs git ls-files --others --exclude-standard content/articles/ | xargs grep -h \"\"^category:\"\")",
       "Bash(# Get ALL categories from both committed and new articles echo \"\"Checking ALL categories in the system...\"\" # Get categories from committed articles git ls-files content/articles/ | xargs grep -h \"\"^category:\"\")",
       "Bash(# Fetch the categories page and extract category links echo \"\"Checking categories displayed on /categories page...\"\" echo \"\"\"\" # Get the categories page HTML and extract hrefs to category pages curl -s http://localhost:3000/categories)",
-      "Bash(# Final comprehensive test echo \"\"=== FINAL COMPREHENSIVE TEST ===\"\" echo \"\"\"\" # Fetch all category links from the page curl -s http://localhost:3000/categories)"
+      "Bash(# Final comprehensive test echo \"\"=== FINAL COMPREHENSIVE TEST ===\"\" echo \"\"\"\" # Fetch all category links from the page curl -s http://localhost:3000/categories)",
+      "Bash(do grep \"^category:\" \"/home/owais-abbasi/parho/$file\")",
+      "Bash(do if ! git ls-files --error-unmatch \"$f\")",
+      "Bash(then grep \"^category:\" \"$f\")",
+      "Bash(do grep \"^category:\" \"$f\")"
     ],
     "deny": [],
     "ask": []
