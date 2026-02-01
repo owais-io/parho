@@ -66,7 +66,10 @@
       "Bash(do grep \"^category:\" \"/home/owais-abbasi/parho/$file\")",
       "Bash(do if ! git ls-files --error-unmatch \"$f\")",
       "Bash(then grep \"^category:\" \"$f\")",
-      "Bash(do grep \"^category:\" \"$f\")"
+      "Bash(do grep \"^category:\" \"$f\")",
+      "Bash(while read f)",
+      "Bash(do if grep -q \"Women''s Tennis\" \"$f\")",
+      "Bash(then echo \"$f\" fi done)"
     ],
     "deny": [],
     "ask": []
