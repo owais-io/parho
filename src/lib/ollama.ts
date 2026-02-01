@@ -66,16 +66,16 @@ Transform this Guardian article:
 
 2. SUMMARIZE THE ARTICLE: Write a 60-80 word summary using simple, conversational English. Focus on the key points that matter most to readers.
 
-3. CATEGORIZE THE ARTICLE: Pick a specific category (1-3 words) that captures what the story is really about. Be specific, not generic.
+3. CATEGORIZE THE ARTICLE: Pick a specific category (3-4 words) that captures what the story is really about. Be specific, not generic.
 
-Good examples: "NATO & Defense", "Human Rights", "Housing Market", "Local Elections", "Climate Policy", "Tech Industry", "Immigration Law", "Public Health", "Criminal Justice", "Energy Policy", "Trade & Tariffs", "Labor Rights"
+Good examples: "NATO & European Defense", "Global Human Rights Issues", "US Housing Market", "Local Government Elections", "Climate Change Policy", "Tech Industry Regulation", "US Immigration Law", "Global Public Health", "Criminal Justice Reform", "Renewable Energy Policy", "International Trade Tariffs", "Worker & Labor Rights"
 
-Bad examples: "Politics" (too vague), "News" (meaningless), "World" (too broad), "Business" (too generic)
+Bad examples: "Politics" (too vague), "News" (meaningless), "World" (too broad), "Business" (too generic), "Human Rights" (too short), "Climate Policy" (too short)
 
 Format your response EXACTLY like this:
 TITLE: [your transformed title here]
 SUMMARY: [your 60-80 word summary here]
-CATEGORY: [your 1-2 word category here]
+CATEGORY: [your 3-4 word category here]
 
 Original Title: ${title}
 
@@ -135,10 +135,10 @@ function parseOllamaResponse(response: string): OllamaResponse {
   let category = 'News';
   if (categoryMatch) {
     category = categoryMatch[1].trim();
-    // Ensure category is max 3 words
+    // Ensure category is max 4 words
     const words = category.split(/\s+/);
-    if (words.length > 3) {
-      category = words.slice(0, 3).join(' ');
+    if (words.length > 4) {
+      category = words.slice(0, 4).join(' ');
     }
   }
 
