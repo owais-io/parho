@@ -1,5 +1,54 @@
-from git status command, check new articles in directory content/articles. now check if any of these fit in already existing categories, if yes change their categories to the existing categories or else retain the new . Do you understand what i am asking for ? dont do anything, first tell me what do you understand?
+From git status, check new articles in content/articles directory. Normalize their categories to match existing categories in the database/tracked files. If a new article's category 
+  is similar to an existing one, update it to use the existing category. Keep categories that are genuinely new.                                                                        
+                                                                                                                                                                                        
+  ---                                                                                                                                                                                   
+  Step-by-Step Method                                                                                                                                                                   
+                                                                                                                                                                                        
+  1. Get Existing Categories (from tracked/committed articles)                                                                                                                          
+                                                                                                                                                                                        
+  git ls-files content/articles/*.mdx | xargs grep "^category:" 2>/dev/null | sed 's/.*category: "//' | sed 's/"$//' | sort | uniq -c | sort -rn                                        
+  This gives you all categories currently in use with their counts.                                                                                                                     
+                                                                                                                                                                                        
+  2. Get New Article Categories (from untracked files)                                                                                                                                  
+                                                                                                                                                                                        
+  git status --porcelain | grep "^??" | grep "content/articles" | cut -c4- | xargs grep "^category:" 2>/dev/null | sed 's/.*category: "//' | sed 's/"$//' | sort | uniq -c | sort -rn   
+  This shows categories in the new untracked articles.                                                                                                                                  
+                                                                                                                                                                                        
+  3. Compare and Create Mapping                                                                                                                                                         
+                                                                                                                                                                                        
+  Manually or programmatically map new categories to existing ones based on similarity:                                                                                                 
+  - "Tennis Australian Open Final" → "Tennis Sports News"                                                                                                                               
+  - "Premier League VAR Decision" → "Premier League Match Reports"                                                                                                                      
+  - etc.                                                                                                                                                                                
+                                                                                                                                                                                        
+  4. Run Python Script to Update Files                                                                                                                                                  
+                                                                                                                                                                                        
+  Create a script with:                                                                                                                                                                 
+  - List of existing categories                                                                                                                                                         
+  - Mapping dictionary (new → existing)                                                                                                                                                 
+  - Loop through untracked files, read content, replace category, write back                                                                                                            
+                                                                                                                                                                                        
+  5. Verify Changes                                                                                                                                                                     
+                                                                                                                                                                                        
+  git status --porcelain | grep "^??" | grep "content/articles" | cut -c4- | xargs grep "^category:" | sort | uniq -c | sort -rn                                                        
+                                                                                                                                                                                        
+  ---                                                                                                                                                                                   
+  Key Files/Locations                                                                                                                                                                   
+                                                                                                                                                                                        
+  - Articles: content/articles/*.mdx                                                                                                                                                    
+  - Category field: In frontmatter as category: "Category Name"                                                                                                                         
+  - Database: articles.db (has sectionName column, but categories are in MDX files)  
 
+
+
+
+
+
+
+
+
+
+  
 now check that all categories on the categories page, when clicked upon, open a new page and does not return 404.
 
 go on the categories page, and check all the cateogires. you will find many categoires similar. merge the similar categories. but do not make the categories sound general in order to merge them. Categories should be specific and reader should have a sense of the stories in the category but just reading the name of the category. Category name's length should be at least 3 words and not more than 4 words. Secondly, the posts in content/articles need to be updated with the merged/new cateogry name. Do you understand what i am asking for ? dont do anything, first tell me what do you understand?

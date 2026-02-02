@@ -69,7 +69,8 @@
       "Bash(do grep \"^category:\" \"$f\")",
       "Bash(while read f)",
       "Bash(do if grep -q \"Women''s Tennis\" \"$f\")",
-      "Bash(then echo \"$f\" fi done)"
+      "Bash(then echo \"$f\" fi done)",
+      "Bash(do git show \"HEAD:$f\")"
     ],
     "deny": [],
     "ask": []
