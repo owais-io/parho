@@ -70,7 +70,9 @@
       "Bash(while read f)",
       "Bash(do if grep -q \"Women''s Tennis\" \"$f\")",
       "Bash(then echo \"$f\" fi done)",
-      "Bash(do git show \"HEAD:$f\")"
+      "Bash(do git show \"HEAD:$f\")",
+      "Bash(node test-category-urls.js:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []
