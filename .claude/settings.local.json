@@ -73,7 +73,9 @@
       "Bash(do git show \"HEAD:$f\")",
       "Bash(node test-category-urls.js:*)",
       "Bash(pkill:*)",
-      "Bash(do grep -l \"Le Pen Election Ban\" \"$f\")"
+      "Bash(do grep -l \"Le Pen Election Ban\" \"$f\")",
+      "Bash(do cat \"$f\")",
+      "Bash(xxd:*)"
     ],
     "deny": [],
     "ask": []
