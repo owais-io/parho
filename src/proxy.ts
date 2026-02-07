@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // Block /admin, /summaries, and related API routes in production
   if (process.env.NODE_ENV === 'production') {
     const path = request.nextUrl.pathname;
@@ -26,7 +26,7 @@ export function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 
-// Configure which routes the middleware runs on
+// Configure which routes the proxy runs on
 export const config = {
   matcher: [
     '/admin/:path*',

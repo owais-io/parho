@@ -8,9 +8,9 @@ import { Metadata } from 'next';
 import { getCollectionPageSchema, getBreadcrumbSchema } from '@/lib/structured-data';
 
 interface CategoryPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 // Generate static params for all categories at build time
@@ -23,7 +23,8 @@ export async function generateStaticParams() {
 
 // Generate metadata for each category page
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
-  const category = getCategoryBySlug(params.slug);
+  const { slug } = await params;
+  const category = getCategoryBySlug(slug);
 
   if (!category) {
     return {
@@ -35,20 +36,21 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
     title: `${category.name} - parho.net`,
     description: `Explore ${category.articleCount} articles in the ${category.name} category. AI-summarized news from The Guardian.`,
     alternates: {
-      canonical: `/categories/${params.slug}`,
+      canonical: `/categories/${slug}`,
     },
   };
 }
 
-export default function CategoryPage({ params }: CategoryPageProps) {
-  const category = getCategoryBySlug(params.slug);
+export default async function CategoryPage({ params }: CategoryPageProps) {
+  const { slug } = await params;
+  const category = getCategoryBySlug(slug);
 
   if (!category) {
     notFound();
   }
 
   // Get articles for this category using the proper slug generation
-  const categoryArticles = getArticlesByCategory(params.slug);
+  const categoryArticles = getArticlesByCategory(slug);
 
   const latestArticle = categoryArticles[0];
 
